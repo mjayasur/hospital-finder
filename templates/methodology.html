@@ -14,14 +14,13 @@
             --accent: #1a73e8;
             --accent-soft: rgba(26, 115, 232, 0.08);
             --shadow-soft: 0 1px 3px rgba(60, 64, 67, 0.2);
-            --danger: #c5221f;
-            --success: #188038;
-            --warning: #ea8600;
             --chip-bg: #f1f3f4;
-        }
-
-        * {
-            box-sizing: border-box;
+            --warning-bg: #fef7e0;
+            --warning-border: rgba(234, 134, 0, 0.5);
+            --danger-bg: #fce8e6;
+            --danger-border: rgba(197, 34, 31, 0.45);
+            --info-bg: #f8f9fa;
+            --info-border: #c4c7cc;
         }
 
         body {
@@ -31,84 +30,61 @@
             color: var(--fg);
         }
 
-        a {
-            color: var(--accent);
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        .page {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
         header {
             height: 56px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 24px;
-            font-size: 14px;
-            color: var(--muted);
-            background: #ffffff;
+            background: #fff;
             border-bottom: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 14px;
         }
 
         header .logo {
             font-weight: 600;
-            letter-spacing: -0.03em;
             color: #202124;
+            letter-spacing: -0.03em;
         }
 
         header nav a {
+            color: var(--accent);
+            text-decoration: none;
             margin-left: 16px;
         }
 
         main {
-            flex: 1;
-            padding: 16px;
+            padding: 20px;
         }
 
-        .content-shell {
-            max-width: 960px;
-            margin: 0 auto 32px auto;
+        .content {
+            max-width: 780px;
+            margin: 0 auto;
         }
 
-        .hero {
-            background: #ffffff;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-soft);
-            padding: 20px 20px 16px;
-            margin-bottom: 16px;
-        }
-
-        .hero-title {
+        h1 {
             font-size: 28px;
-            font-weight: 500;
-            letter-spacing: -0.03em;
             margin-bottom: 4px;
+            font-weight: 500;
+            letter-spacing: -0.02em;
         }
 
-        .hero-subtitle {
-            font-size: 13px;
-            color: var(--muted);
-            max-width: 640px;
+        p {
+            font-size: 14px;
+            line-height: 1.55;
+            color: var(--fg);
         }
 
         .pill-note {
             display: inline-flex;
             align-items: center;
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 999px;
             background: #e8f0fe;
             color: #174ea6;
             font-size: 11px;
-            margin-top: 8px;
+            margin-top: 6px;
         }
 
         .pill-dot {
@@ -119,84 +95,29 @@
             margin-right: 6px;
         }
 
-        .layout-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.1fr);
-            gap: 16px;
-            margin-top: 16px;
-        }
-
-        .section-card {
-            background: #ffffff;
+        .card {
+            background: #fff;
             border-radius: 20px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow-soft);
-            padding: 16px 18px 14px;
-            font-size: 13px;
+            padding: 18px 20px;
+            margin-top: 20px;
         }
 
-        .section-title {
-            font-size: 15px;
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 6px;
             font-weight: 500;
-            margin-bottom: 4px;
-        }
-
-        .section-subtitle {
-            font-size: 12px;
-            color: var(--muted);
-            margin-bottom: 8px;
-        }
-
-        .section-card ul {
-            margin: 8px 0 0 0;
-            padding-left: 18px;
-            font-size: 13px;
-        }
-
-        .section-card li+li {
-            margin-top: 4px;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 999px;
-            padding: 2px 8px;
-            background: var(--chip-bg);
-            color: #3c4043;
-            font-size: 10px;
-            border: 1px solid rgba(0, 0, 0, 0.04);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-        }
-
-        .badge-green {
-            background: #e6f4ea;
-            color: var(--success);
-            border-color: rgba(24, 128, 56, 0.16);
-        }
-
-        .badge-amber {
-            background: #fef7e0;
-            color: var(--warning);
-            border-color: rgba(234, 134, 0, 0.16);
-        }
-
-        .badge-red {
-            background: #fce8e6;
-            color: var(--danger);
-            border-color: rgba(197, 34, 31, 0.16);
         }
 
         .callout {
+            margin-top: 12px;
+            padding: 12px;
             border-radius: 12px;
-            padding: 10px 12px;
-            font-size: 12px;
-            margin-top: 10px;
             display: flex;
-            gap: 8px;
-            align-items: flex-start;
+            gap: 10px;
+            font-size: 13px;
+            line-height: 1.45;
         }
 
         .callout-icon {
@@ -205,459 +126,143 @@
             margin-top: 1px;
         }
 
-        .callout-body-title {
-            font-weight: 500;
-            margin-bottom: 2px;
-        }
-
-        .callout-info {
-            border: 1px solid #c4c7cc;
-            background: #f8f9fa;
+        .info {
+            background: var(--info-bg);
+            border: 1px solid var(--info-border);
             color: var(--muted);
         }
 
-        .callout-warning {
-            border: 1px solid rgba(234, 134, 0, 0.5);
-            background: #fef7e0;
-            color: #5f4320;
+        .warning {
+            background: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            color: #7a5a00;
         }
 
-        .callout-danger {
-            border: 1px solid rgba(197, 34, 31, 0.45);
-            background: #fce8e6;
-            color: #6b201d;
+        .danger {
+            background: var(--danger-bg);
+            border: 1px solid var(--danger-border);
+            color: #7a1f1f;
         }
 
-        .stack {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 8px;
+        ul {
+            margin: 10px 0 0 20px;
+            padding: 0;
+            font-size: 14px;
         }
 
-        .two-cols {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
-            margin-top: 8px;
+        li {
+            margin-bottom: 6px;
         }
 
-        .small-label {
-            font-size: 11px;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            margin-bottom: 2px;
+        a {
+            color: var(--accent);
+            text-decoration: none;
         }
 
-        .metric-row {
-            font-size: 12px;
-            display: flex;
-            justify-content: space-between;
-            gap: 8px;
-            margin-top: 4px;
-        }
-
-        .metric-label {
-            color: var(--fg);
-        }
-
-        .metric-note {
-            font-size: 11px;
-            color: var(--muted);
-            margin-top: 2px;
-        }
-
-        .link-list {
-            margin: 6px 0 0 0;
-            padding-left: 18px;
-            font-size: 12px;
-        }
-
-        .link-list li+li {
-            margin-top: 3px;
-        }
-
-        @media (max-width: 900px) {
-            .layout-grid {
-                grid-template-columns: minmax(0, 1fr);
-            }
+        a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 
 <body>
-    <div class="page">
-        <header>
-            <div class="logo">Hospital Finder</div>
-            <nav>
-                <a href="/">Search</a>
-                <a href="/methodology">Methodology</a>
-            </nav>
-        </header>
+    <header>
+        <div class="logo">Hospital Finder</div>
+        <nav>
+            <a href="/">Search</a>
+            <a href="/methodology">Methodology</a>
+        </nav>
+    </header>
 
-        <main>
-            <div class="content-shell">
-                <section class="hero">
-                    <div class="hero-title">How this tool works</div>
-                    <div class="hero-subtitle">
-                        This page summarizes how Medicare inpatient claims are turned into the hospital and surgeon
-                        summaries you see in the app. It is intentionally simplified and does <strong>not</strong>
-                        replace official CMS documentation or clinical judgment.
-                    </div>
-                    <div class="pill-note">
-                        <span class="pill-dot"></span>
-                        Built on Medicare inpatient claims, NPPES, ICD-10-PCS/CM, and public CMS documentation.
-                    </div>
+    <main>
+        <div class="content">
 
-                    <div class="callout callout-warning">
-                        <div class="callout-icon">⚠️</div>
-                        <div>
-                            <div class="callout-body-title">Not medical advice</div>
-                            This tool is for exploratory research and education. It is not risk-adjusted, does not fully
-                            capture patient complexity, and should not be used as the sole basis for medical decisions
-                            or hospital/surgeon choice.
-                        </div>
-                    </div>
-                </section>
-
-                <section class="layout-grid">
-                    <!-- Left column: data + pipeline -->
-                    <div class="stack">
-                        <div class="section-card">
-                            <div class="section-title">
-                                Data sources <span class="badge">Overview</span>
-                            </div>
-                            <div class="section-subtitle">
-                                All metrics are derived from de-identified Medicare inpatient claims plus reference
-                                tables.
-                            </div>
-                            <ul>
-                                <li>
-                                    <strong>Medicare claims:</strong> Inpatient hospital stays (claim type code 60),
-                                    including
-                                    diagnosis codes, ICD-10-PCS procedure codes, dates, payment amounts, and discharge
-                                    status.
-                                </li>
-                                <li>
-                                    <strong>Provider & hospital identity:</strong> NPPES NPI registry is used to map
-                                    NPIs to
-                                    hospital names and practice addresses (organization NPIs) and to surgeon
-                                    names/credentials
-                                    (individual NPIs).
-                                </li>
-                                <li>
-                                    <strong>Procedure descriptions:</strong> The official ICD-10-PCS order file is
-                                    parsed to
-                                    attach short and long titles to procedure codes.
-                                </li>
-                                <li>
-                                    <strong>Comorbidities:</strong> Elixhauser comorbidity flags are derived from the
-                                    CMS
-                                    ICD-10-CM comorbidity reference file.
-                                </li>
-                            </ul>
-
-                            <ul class="link-list">
-                                <li>
-                                    CMS main site: <a href="https://www.cms.gov" target="_blank"
-                                        rel="noopener noreferrer">
-                                        https://www.cms.gov
-                                    </a>
-                                </li>
-                                <li>
-                                    CMS Research, Statistics, Data, and Systems:
-                                    <a href="https://www.cms.gov/research-statistics-data-systems" target="_blank"
-                                        rel="noopener noreferrer">
-                                        CMS data resources
-                                    </a>
-                                </li>
-                                <li>
-                                    ICD-10-PCS & ICD-10-CM files:
-                                    <a href="https://www.cms.gov/medicare/icd-10/2025-icd-10-pcs" target="_blank"
-                                        rel="noopener noreferrer">
-                                        CMS ICD-10 files
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="section-card">
-                            <div class="section-title">
-                                From claims to operations <span class="badge badge-green">Step 1</span>
-                            </div>
-                            <div class="section-subtitle">
-                                We construct an operation-level table: one row per inpatient operation with key outcomes
-                                and
-                                demographics.
-                            </div>
-                            <ul>
-                                <li>
-                                    <strong>Clean dates & IDs:</strong> Admission, discharge, and procedure dates are
-                                    converted
-                                    to real datetimes; NPIs are normalized to 10-digit strings.
-                                </li>
-                                <li>
-                                    <strong>Select inpatient claims:</strong> We keep only inpatient claims (claim type
-                                    60).
-                                </li>
-                                <li>
-                                    <strong>Primary procedure:</strong>
-                                    <ul>
-                                        <li>Trust <code>ICD_PRCDR_CD1</code> when it is a valid 7-character ICD-10-PCS
-                                            code.</li>
-                                        <li>If missing/invalid, scan all procedure fields, preferring surgical
-                                            procedures and earlier
-                                            procedure dates.</li>
-                                    </ul>
-                                </li>
-                                <li>
-                                    <strong>Operation record:</strong> For each claim we keep:
-                                    procedure code & description, operating surgeon NPI, hospital NPI, claim payment,
-                                    length of stay,
-                                    comorbidity count, complication flags, mortality, and 30-day readmission.
-                                </li>
-                            </ul>
-
-                            <div class="callout callout-info">
-                                <div class="callout-icon">ℹ️</div>
-                                <div>
-                                    <div class="callout-body-title">Length of stay (LOS)</div>
-                                    LOS is computed as discharge date minus admission date, plus one day, and truncated
-                                    at zero
-                                    for any data inconsistencies.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="section-card">
-                            <div class="section-title">
-                                Hospital & surgeon aggregation <span class="badge badge-green">Step 2</span>
-                            </div>
-                            <div class="section-subtitle">
-                                Operation-level rows are aggregated to build hospital- and surgeon-level metrics.
-                            </div>
-
-                            <div class="two-cols">
-                                <div>
-                                    <div class="small-label">Hospital-level</div>
-                                    <div class="metric-row">
-                                        <span class="metric-label">Grouping keys</span>
-                                        <span class="metric-label">Hospital NPI × procedure (or group)</span>
-                                    </div>
-                                    <div class="metric-note">
-                                        For each hospital we compute:
-                                        case count, mean/median cost, mean/median LOS, and
-                                        complication/mortality/readmission rates.
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="small-label">Surgeon-level</div>
-                                    <div class="metric-row">
-                                        <span class="metric-label">Grouping keys</span>
-                                        <span class="metric-label">Surgeon NPI × hospital × procedure</span>
-                                    </div>
-                                    <div class="metric-note">
-                                        For each surgeon we compute the same metrics, but only show caseloads for
-                                        high-volume surgeons
-                                        (top ~10% by volume at that hospital) to reduce re-identification risk.
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="callout callout-info">
-                                <div class="callout-icon">📊</div>
-                                <div>
-                                    <div class="callout-body-title">Percentile ranks</div>
-                                    Within the national dataset we rank hospitals and surgeons on:
-                                    complication rate, 30-day readmission, mortality, mean LOS, and mean cost.
-                                    Percentile ranks (0–100) are shown as “better / worse than peers” chips in the UI.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right column: definitions + guardrails -->
-                    <div class="stack">
-                        <div class="section-card">
-                            <div class="section-title">
-                                Key outcome definitions <span class="badge">How metrics are defined</span>
-                            </div>
-                            <div class="section-subtitle">
-                                All rates are simple proportions within the Medicare sample, not risk-adjusted.
-                            </div>
-
-                            <ul>
-                                <li>
-                                    <strong>Any complication:</strong> A claim is marked as having a complication if any
-                                    diagnosis
-                                    code in the stay matches pre-specified ICD-10-CM prefixes (e.g., T80–T88, A41, R65,
-                                    I97, K91).
-                                    Complications are also categorized (e.g., “Sepsis / Septic Shock”, “Surgical /
-                                    Device
-                                    Complication”).
-                                </li>
-                                <li>
-                                    <strong>30-day readmission:</strong> A readmission occurs when the same beneficiary
-                                    has a new
-                                    inpatient admission within 30 days after discharge from the original stay.
-                                    This is not limited to the same hospital.
-                                </li>
-                                <li>
-                                    <strong>In-hospital mortality:</strong> Marked when discharge status indicates
-                                    “expired”
-                                    (e.g., PTNT_DSCHRG_STUS_CD = 20).
-                                </li>
-                                <li>
-                                    <strong>Cost:</strong> Uses the claim payment amount (e.g., CLM_PMT_AMT) as a proxy
-                                    for Medicare
-                                    spending on that stay. Alternative standardized payment fields could be substituted
-                                    in future
-                                    versions.
-                                </li>
-                                <li>
-                                    <strong>Comorbidity burden:</strong> Elixhauser flags are derived from all diagnosis
-                                    codes
-                                    on the claim using the CMS reference mapping. The UI currently displays a simple
-                                    count of
-                                    comorbid conditions per patient in aggregate.
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="section-card">
-                            <div class="section-title">
-                                Volume & privacy guardrails <span class="badge badge-amber">Safety</span>
-                            </div>
-                            <div class="section-subtitle">
-                                To reduce re-identification risk in small cells, we suppress details when volume is low.
-                            </div>
-
-                            <ul>
-                                <li>
-                                    <strong>Hospital low-volume rule:</strong> If a hospital has fewer than 11 Medicare
-                                    inpatient
-                                    cases in the current search scope (procedure group or all tracked procedures), we:
-                                    <ul>
-                                        <li>Show that volume is “very low (suppressed)”.</li>
-                                        <li>Hide complication, mortality, readmission, cost, and LOS details.</li>
-                                        <li>Hide procedure-level and surgeon-level breakdowns for that scope.</li>
-                                    </ul>
-                                </li>
-                                <li>
-                                    <strong>Surgeon privacy rule:</strong> We only display explicit caseloads for
-                                    surgeons in the
-                                    top ~10% of volume at a given hospital for the selected scope. Others appear without
-                                    case counts,
-                                    or may be omitted entirely.
-                                </li>
-                                <li>
-                                    <strong>Top procedures table:</strong> Within a hospital, the “Top procedures” table
-                                    is limited
-                                    to procedures with more than 10 cases in the dataset; lower-volume procedures remain
-                                    hidden.
-                                </li>
-                            </ul>
-
-                            <div class="callout callout-danger">
-                                <div class="callout-icon">🛡️</div>
-                                <div>
-                                    <div class="callout-body-title">Small numbers behave noisily</div>
-                                    Even just above the 11-case threshold, percentages can swing dramatically due to a
-                                    handful
-                                    of events. Interpret any metric based on small numbers with extreme caution.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="section-card">
-                            <div class="section-title">
-                                Geocoding & search logic <span class="badge">Maps</span>
-                            </div>
-                            <div class="section-subtitle">
-                                We use Google Maps to locate hospitals and compute distances, then apply the clinical
-                                filters.
-                            </div>
-
-                            <ul>
-                                <li>
-                                    <strong>Hospital location:</strong> Hospital practice addresses from NPPES are
-                                    geocoded to
-                                    latitude/longitude. The app uses these coordinates (not just ZIP codes) when
-                                    searching by
-                                    distance.
-                                </li>
-                                <li>
-                                    <strong>Search radius:</strong> For a chosen location, we compute the Haversine
-                                    distance to
-                                    each hospital and keep only hospitals within the specified radius (e.g., ~25 miles).
-                                </li>
-                                <li>
-                                    <strong>Procedure group filter:</strong> Procedure groups are defined by ICD-10-PCS
-                                    prefixes
-                                    (e.g., hip replacement, knee replacement, CABG). The hospital list is always
-                                    radius-based; procedure grouping only affects which claims are used for the metrics.
-                                </li>
-                                <li>
-                                    <strong>Sorting:</strong> Within the radius, hospitals are sorted primarily by
-                                    complication
-                                    rate, then mortality, then distance.
-                                </li>
-                            </ul>
-
-                            <div class="callout callout-info">
-                                <div class="callout-icon">📍</div>
-                                <div>
-                                    <div class="callout-body-title">Map caveats</div>
-                                    Geocoding depends on NPPES address quality. Large systems with multiple campuses or
-                                    address changes may not perfectly match the physical location you expect.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="section-card">
-                            <div class="section-title">
-                                Limitations & interpretation <span class="badge badge-red">Read this</span>
-                            </div>
-                            <ul>
-                                <li>
-                                    Metrics are based on <strong>Medicare inpatient</strong> claims only. They may not
-                                    reflect
-                                    outcomes for younger patients, outpatient surgery, or non-Medicare payers.
-                                </li>
-                                <li>
-                                    No formal <strong>risk adjustment</strong> is performed here. Hospitals serving
-                                    sicker or
-                                    more complex patients may appear to have higher complication or readmission rates.
-                                </li>
-                                <li>
-                                    ICD-10 diagnosis coding is imperfect. Some complications may be missed, and some
-                                    diagnoses
-                                    may represent pre-existing conditions rather than new events.
-                                </li>
-                                <li>
-                                    Percentiles compare hospitals and surgeons <strong>within this dataset</strong>, not
-                                    to
-                                    all hospitals in the U.S.
-                                </li>
-                            </ul>
-
-                            <div class="callout callout-warning">
-                                <div class="callout-icon">👀</div>
-                                <div>
-                                    <div class="callout-body-title">How to use this</div>
-                                    Treat these numbers as a starting point for questions, not a final scorecard.
-                                    Talk with clinicians, review multiple data sources (including official CMS quality
-                                    programs), and consider your own medical situation when using any hospital-quality
-                                    data.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+            <h1>Methodology</h1>
+            <p>This page summarizes how hospital and surgeon data are constructed from 2018 Medicare inpatient claims.
+            </p>
+            <div class="pill-note">
+                <span class="pill-dot"></span>
+                Built on subsection of 2018 Medicare claims + NPPES + ICD-10-PCS/CM mappings
             </div>
-        </main>
-    </div>
+
+            <!-- DATA SOURCES -->
+            <div class="card">
+                <h2>Data Sources</h2>
+                <ul>
+                    <li><strong>Sample of Medicare inpatient claims from 2018</strong> (claim type 60): diagnoses,
+                        procedures, dates,
+                        discharge status, and payments.</li>
+                    <li><strong>NPPES registry</strong>: maps NPIs to hospital locations and surgeon names.</li>
+                    <li><strong>ICD-10-PCS</strong> procedure descriptions from CMS official order files.</li>
+                    <li><strong>ICD-10-CM</strong> diagnosis mapping for Elixhauser comorbidities.</li>
+                </ul>
+
+                <div class="callout info">
+                    <div class="callout-icon">ℹ️</div>
+                    <div>Links: <a href="https://www.cms.gov" target="_blank">CMS.gov</a>,
+                        <a href="https://www.cms.gov/medicare/icd-10" target="_blank">CMS ICD-10</a>,
+                        <a href="https://download.cms.gov/nppes" target="_blank">NPPES</a>.
+                    </div>
+                </div>
+            </div>
+
+            <!-- HOW METRICS ARE BUILT -->
+            <div class="card">
+                <h2>How We Build Metrics</h2>
+                <ul>
+                    <li><strong>Primary operation:</strong> If <code>ICD_PRCDR_CD1</code> is valid, use it; otherwise
+                        select the earliest surgical ICD-10-PCS code.</li>
+                    <li><strong>Complications:</strong> Flagged when ICD-10-CM codes match known complication prefixes
+                        (e.g., T80–T88, A41, R65, I97).</li>
+                    <li><strong>Readmissions:</strong> A new inpatient admission for the same beneficiary within 30
+                        days.</li>
+                    <li><strong>Mortality:</strong> Based on discharge status = “expired”.</li>
+                    <li><strong>Costs:</strong> Uses Medicare-paid amount for the stay.</li>
+                    <li><strong>Length of stay:</strong> Discharge date minus admission date + 1.</li>
+                </ul>
+
+                <div class="callout info">
+                    <div class="callout-icon">📊</div>
+                    <div>Hospitals and surgeons are given percentile ranks compared with all others in the dataset.
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRIVACY -->
+            <div class="card">
+                <h2>Privacy & Suppression Rules</h2>
+                <ul>
+                    <li><strong>Hospitals with fewer than 11 Medicare cases</strong> have all detailed metrics hidden.
+                    </li>
+                    <li><strong>Surgeon case counts</strong> shown only for high-volume surgeons (top ~10% at that
+                        hospital).</li>
+                    <li><strong>Procedure tables</strong> only list procedures with more than 10 cases.</li>
+                </ul>
+
+                <div class="callout warning">
+                    <div class="callout-icon">⚠️</div>
+                    <div>Small numbers swing rapidly. Interpret low-volume data with caution.</div>
+                </div>
+            </div>
+
+            <!-- LIMITATIONS -->
+            <div class="card">
+                <h2>Important Limitations</h2>
+                <ul>
+                    <li>Not risk-adjusted beyond simple comorbidity counts.</li>
+                    <li>Medicare-only: excludes younger and privately insured patients.</li>
+                    <li>ICD-10 coding can under- or over-capture complications.</li>
+                    <li>Percentiles compare providers <em>within this dataset</em>, not all U.S. hospitals.</li>
+                </ul>
+
+                <div class="callout danger">
+                    <div class="callout-icon">🚫</div>
+                    <div>This is not medical advice. Use as a starting point, not a determinant of care.</div>
+                </div>
+            </div>
+
+        </div>
+    </main>
 </body>
 
 </html>

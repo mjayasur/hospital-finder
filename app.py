@@ -5,9 +5,8 @@ from pathlib import Path
 from math import radians, sin, cos, asin, sqrt
 
 import numpy as np
-import requests
-from flask import Flask, request, jsonify, render_template
 import pandas as pd
+from flask import Flask, request, jsonify, render_template
 
 # -------------------------------------------------------------------
 # Config
@@ -18,8 +17,6 @@ DATA_DIR = BASE_DIR / "derived_data"
 # Use geocoded hospital metrics file
 HOSPITAL_CSV = DATA_DIR / "hospital_metrics_geocoded.csv"
 PROVIDER_CSV = DATA_DIR / "provider_metrics.csv"
-
-SEMANTIC_SCHOLAR_API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY", None)
 
 app = Flask(__name__)
 
@@ -84,7 +81,16 @@ PROCEDURE_GROUPS = {
     # Colorectal resection
     "COLORECTAL_RESECTION": {
         "label": "Colorectal resection (colectomy, etc.)",
-        "prefixes": ["0DTE", "0DTF", "0DTG", "0DTH", "0DTK", "0DTL", "0DTM", "0DTN"],
+        "prefixes": [
+            "0DTE",
+            "0DTF",
+            "0DTG",
+            "0DTH",
+            "0DTK",
+            "0DTL",
+            "0DTM",
+            "0DTN",
+        ],
     },
 
     # Cataract surgery
@@ -207,7 +213,10 @@ def haversine_km(lat1, lon1, lat2, lon2) -> np.ndarray:
     dlat = lat2 - lat1
     dlon = lon2 - lon1
 
-    a = np.sin(dlat / 2.0) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2.0) ** 2
+    a = (
+        np.sin(dlat / 2.0) ** 2
+        + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2.0) ** 2
+    )
     c = 2 * np.arcsin(np.sqrt(a))
     r = 6371.0  # Earth radius in km
     return r * c
@@ -222,49 +231,6 @@ def weighted_mean(series: pd.Series, weights: pd.Series) -> float | None:
     s = s[mask]
     w = w[mask]
     return float(np.average(s, weights=w))
-
-
-def fetch_semantic_scholar_h_index(name: str | None) -> dict | None:
-    """
-    Lookup a scholar by name via Semantic Scholar Author Search API and
-    return basic h-index metadata.
-
-    Only used for high-volume surgeons to keep traffic and latency down.
-    """
-    if not name:
-        return None
-    try:
-        params = {
-            "query": name,
-            "fields": "name,url,hIndex,authorId",
-            "limit": 1,
-        }
-        headers = {}
-        if SEMANTIC_SCHOLAR_API_KEY:
-            headers["x-api-key"] = SEMANTIC_SCHOLAR_API_KEY
-
-        resp = requests.get(
-            "https://api.semanticscholar.org/graph/v1/author/search",
-            params=params,
-            headers=headers,
-            timeout=5,
-        )
-        if resp.status_code != 200:
-            return None
-        data = resp.json() or {}
-        hits = data.get("data") or []
-        if not hits:
-            return None
-        author = hits[0]
-        return {
-            "h_index": author.get("hIndex"),
-            "author_id": author.get("authorId"),
-            "url": author.get("url"),
-            "name": author.get("name"),
-        }
-    except Exception:
-        # Fail quietly: h-index is a nice-to-have
-        return None
 
 
 # -------------------------------------------------------------------
@@ -299,7 +265,9 @@ if zip_col_h:
 
 # Ensure lat/lng columns exist and drop rows with missing coords
 if "lat" not in hospital_df.columns or "lng" not in hospital_df.columns:
-    raise ValueError("hospital_metrics_geocoded.csv must contain 'lat' and 'lng' columns.")
+    raise ValueError(
+        "hospital_metrics_geocoded.csv must contain 'lat' and 'lng' columns."
+    )
 hospital_df = hospital_df.dropna(subset=["lat", "lng"])
 
 # -------------------------------------------------------------------
@@ -310,9 +278,11 @@ def index():
     # expects templates/index.html
     return render_template("index.html")
 
+
 @app.route("/methodology")
 def methodology():
     return render_template("methodology.html")
+
 
 @app.route("/api/procedure-groups")
 def api_procedure_groups():
@@ -348,7 +318,8 @@ def api_search():
       not which hospitals appear.
     * If the hospital has < 11 Medicare cases in this scope, its detailed panel will be suppressed
       on the frontend and metrics are nulled server-side for safety.
-    * Surgeons' caseloads are only exposed if they are in the top ~10% by volume at that hospital.
+    * Surgeons' caseloads are only exposed if they have > 10 Medicare cases at that hospital
+      (within this scope) to avoid low-volume privacy issues.
     """
     lat_raw = request.args.get("lat")
     lng_raw = request.args.get("lng")
@@ -376,7 +347,9 @@ def api_search():
     # ------------------------------------------------------------------
     # Distance filtering FIRST (as requested)
     # ------------------------------------------------------------------
-    df_all["distance_km"] = haversine_km(df_all["lat"], df_all["lng"], origin_lat, origin_lng)
+    df_all["distance_km"] = haversine_km(
+        df_all["lat"], df_all["lng"], origin_lat, origin_lng
+    )
     df_radius = df_all[df_all["distance_km"] <= radius_km].copy()
 
     if df_radius.empty:
@@ -386,7 +359,9 @@ def api_search():
                 "total": 0,
                 "search_scope": "group" if group_raw else "all",
                 "procedure_group_key": group_raw or None,
-                "procedure_group_label": PROCEDURE_GROUPS.get(group_raw, {}).get("label")
+                "procedure_group_label": PROCEDURE_GROUPS.get(group_raw, {}).get(
+                    "label"
+                )
                 if group_raw in PROCEDURE_GROUPS
                 else None,
                 "radius_km": radius_km,
@@ -407,7 +382,9 @@ def api_search():
 
         if "OPERATION_PCS" not in df_radius.columns:
             return (
-                jsonify({"error": "Hospital metrics file missing OPERATION_PCS column."}),
+                jsonify(
+                    {"error": "Hospital metrics file missing OPERATION_PCS column."}
+                ),
                 500,
             )
 
@@ -485,30 +462,41 @@ def api_search():
             readmit_30_rate_pctile_rank = complication_rate_pctile_rank = None
             mortality_rate_pctile_rank = None
         else:
-            cases_series = pd.to_numeric(hosp_scope["cases"], errors="coerce").fillna(0.0)
+            cases_series = pd.to_numeric(
+                hosp_scope["cases"], errors="coerce"
+            ).fillna(0.0)
             total_cases = float(cases_series.sum())
             avg_cost = weighted_mean(hosp_scope["avg_cost"], cases_series)
             median_cost = weighted_mean(hosp_scope["median_cost"], cases_series)
-            readmit_30_rate = weighted_mean(hosp_scope["readmit_30_rate"], cases_series)
-            complication_rate = weighted_mean(hosp_scope["complication_rate"], cases_series)
-            mortality_rate_val = weighted_mean(hosp_scope["mortality_rate"], cases_series)
+            readmit_30_rate = weighted_mean(
+                hosp_scope["readmit_30_rate"], cases_series
+            )
+            complication_rate = weighted_mean(
+                hosp_scope["complication_rate"], cases_series
+            )
+            mortality_rate_val = weighted_mean(
+                hosp_scope["mortality_rate"], cases_series
+            )
             avg_los = weighted_mean(hosp_scope["avg_LOS"], cases_series)
             median_los = weighted_mean(hosp_scope["median_LOS"], cases_series)
 
             avg_cost_pctile_rank = weighted_mean(
                 hosp_scope["avg_cost_pctile_rank"], cases_series
             ) or weighted_mean(
-                hosp_scope["avg_cost_pctile_rank"], pd.Series([1] * len(hosp_scope))
+                hosp_scope["avg_cost_pctile_rank"],
+                pd.Series([1] * len(hosp_scope)),
             )
             avg_los_pctile_rank = weighted_mean(
                 hosp_scope["avg_LOS_pctile_rank"], cases_series
             ) or weighted_mean(
-                hosp_scope["avg_LOS_pctile_rank"], pd.Series([1] * len(hosp_scope))
+                hosp_scope["avg_LOS_pctile_rank"],
+                pd.Series([1] * len(hosp_scope)),
             )
             readmit_30_rate_pctile_rank = weighted_mean(
                 hosp_scope["readmit_30_rate_pctile_rank"], cases_series
             ) or weighted_mean(
-                hosp_scope["readmit_30_rate_pctile_rank"], pd.Series([1] * len(hosp_scope))
+                hosp_scope["readmit_30_rate_pctile_rank"],
+                pd.Series([1] * len(hosp_scope)),
             )
             complication_rate_pctile_rank = weighted_mean(
                 hosp_scope["complication_rate_pctile_rank"], cases_series
@@ -539,10 +527,16 @@ def api_search():
 
         # Basic metadata from first row (any procedure)
         first_row = hosp_rows_all.iloc[0]
-        city_val = first_row.get(city_col) if city_col else first_row.get("hospital_city")
-        state_val = first_row.get(state_col) if state_col else first_row.get("hospital_state")
-        zip_val = stringify_zip(first_row.get(zip_col)) if zip_col else stringify_zip(
-            first_row.get("hospital_zip")
+        city_val = first_row.get(city_col) if city_col else first_row.get(
+            "hospital_city"
+        )
+        state_val = first_row.get(state_col) if state_col else first_row.get(
+            "hospital_state"
+        )
+        zip_val = (
+            stringify_zip(first_row.get(zip_col))
+            if zip_col
+            else stringify_zip(first_row.get("hospital_zip"))
         )
         full_address = first_row.get("full_address")
         distance_km_val = _safe_float(first_row, "distance_km")
@@ -574,25 +568,16 @@ def api_search():
         docs = provider_sub[provider_sub["ORG_NPI_NUM"] == org_npi_str].copy()
         doctors = []
         if not docs.empty:
-            doc_cases_series = pd.to_numeric(docs["cases"], errors="coerce").fillna(0.0)
-            high_volume_threshold = None
-            if len(doc_cases_series) > 0 and doc_cases_series.max() > 0:
-                high_volume_threshold = float(np.quantile(doc_cases_series, 0.9))
+            # Filter to surgeons with > 10 cases at this hospital (in this scope)
+            docs["cases_num"] = pd.to_numeric(
+                docs["cases"], errors="coerce"
+            ).fillna(0.0)
+            docs_filtered = docs[docs["cases_num"] > 10].copy()
 
-            for _, d in docs.iterrows():
-                raw_cases = _safe_float(d, "cases")
-                numeric_cases = raw_cases if raw_cases is not None else 0.0
-                is_high_volume = (
-                    high_volume_threshold is not None
-                    and numeric_cases >= high_volume_threshold
-                    and numeric_cases > 0
-                )
-
-                semantic_scholar_info = None
-                if is_high_volume:
-                    semantic_scholar_info = fetch_semantic_scholar_h_index(
-                        d.get("provider_full_name")
-                    )
+            for _, d in docs_filtered.iterrows():
+                numeric_cases = _safe_float(d, "cases")
+                if numeric_cases is None:
+                    continue
 
                 doctors.append(
                     {
@@ -606,9 +591,7 @@ def api_search():
                         "credential": d.get("provider_credential")
                         if not pd.isna(d.get("provider_credential"))
                         else None,
-                        # Only publish caseload for high-volume surgeons
-                        "cases": int(numeric_cases) if is_high_volume else None,
-                        "is_high_volume": bool(is_high_volume),
+                        "cases": int(numeric_cases),
                         "avg_cost": _safe_float(d, "avg_cost"),
                         "median_cost": _safe_float(d, "median_cost"),
                         "readmit_30_rate": _safe_float(d, "readmit_30_rate"),
@@ -625,12 +608,15 @@ def api_search():
                         "mortality_rate_pctile_rank": _safe_float(
                             d, "mortality_rate_pctile_rank"
                         ),
-                        "semantic_scholar": semantic_scholar_info,
                     }
                 )
 
         volume_cat = volume_category(cases_value)
-        comp_tier = complication_tier(complication_rate) if not low_volume_suppressed else "Suppressed (low volume)"
+        comp_tier = (
+            complication_tier(complication_rate)
+            if not low_volume_suppressed
+            else "Suppressed (low volume)"
+        )
 
         hospitals.append(
             {

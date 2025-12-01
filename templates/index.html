@@ -907,8 +907,9 @@
                                     <ul class="faculty-list" id="facultyList"></ul>
                                     <div class="explanation-card">
                                         Surgeons listed here are those with Medicare inpatient claims
-                                        for procedures in this search scope at this hospital. This is not
-                                        a complete physician directory.
+                                        for procedures in this search scope at this hospital. Only surgeons
+                                        with more than 10 Medicare cases in this scope are shown, to reduce
+                                        noise from very low-volume operators and protect privacy.
                                     </div>
                                 </div>
                             </div>
@@ -1016,6 +1017,159 @@
 
         let gMapsAutocomplete = null;
         let gMapsGeocoder = null;
+
+        // Semantic Scholar async state
+        let semanticScholarAbortController = null;
+        let semanticScholarTimeoutIds = [];
+        let semanticScholarRateLimited = false;
+
+        function resetSemanticScholarState() {
+            semanticScholarRateLimited = false;
+            if (semanticScholarAbortController) {
+                semanticScholarAbortController.abort();
+                semanticScholarAbortController = null;
+            }
+            semanticScholarTimeoutIds.forEach((id) => clearTimeout(id));
+            semanticScholarTimeoutIds = [];
+        }
+
+        async function fetchSemanticScholarForDoctor(doc, signal) {
+            if (!doc || !doc.name || semanticScholarRateLimited) return;
+            try {
+                const query = encodeURIComponent(doc.name);
+                const searchUrl =
+                    `https://api.semanticscholar.org/graph/v1/author/search?` +
+                    `query=${query}&fields=name,url,hIndex,authorId&limit=1`;
+
+                const resp = await fetch(searchUrl, { signal });
+
+                if (resp.status === 429) {
+                    semanticScholarRateLimited = true;
+                    updateDoctorSemanticScholarUI(doc.npi, {
+                        error: "Semantic Scholar rate limit reached.",
+                    });
+                    return;
+                }
+
+                if (!resp.ok) {
+                    updateDoctorSemanticScholarUI(doc.npi, {
+                        error: "Semantic Scholar lookup failed.",
+                    });
+                    return;
+                }
+
+                const data = await resp.json();
+                const hits = (data && data.data) || [];
+                if (!hits.length) {
+                    updateDoctorSemanticScholarUI(doc.npi, null);
+                    return;
+                }
+
+                const author = hits[0];
+                let papers = [];
+
+                try {
+                    // Fetch a few recent papers for this author
+                    const authorId = author.authorId;
+                    if (authorId) {
+                        const papersUrl =
+                            `https://api.semanticscholar.org/graph/v1/author/${authorId}/papers` +
+                            `?limit=3&fields=title,year,url`;
+                        const papersResp = await fetch(papersUrl, { signal });
+                        if (papersResp.ok) {
+                            const papersData = await papersResp.json();
+                            const paperItems = (papersData && papersData.data) || [];
+                            papers = paperItems
+                                .map((p) => p.paper || p)
+                                .filter((p) => p && p.title);
+                        }
+                    }
+                } catch (err) {
+                    // Silently ignore paper fetch failures
+                    console.warn("Semantic Scholar papers fetch failed", err);
+                }
+
+                updateDoctorSemanticScholarUI(doc.npi, {
+                    author,
+                    papers,
+                });
+            } catch (err) {
+                if (err.name === "AbortError") {
+                    return;
+                }
+                console.error("Semantic Scholar error", err);
+            }
+        }
+
+        function updateDoctorSemanticScholarUI(npi, info) {
+            if (!facultyListEl) return;
+            const selector = `li[data-doctor-npi="${npi || ""}"]`;
+            const li = facultyListEl.querySelector(selector);
+            if (!li) return;
+
+            const container =
+                li.querySelector(".faculty-semantic-scholar") ||
+                li.appendChild(Object.assign(document.createElement("div"), {
+                    className: "faculty-meta faculty-semantic-scholar",
+                }));
+
+            if (!info) {
+                container.textContent =
+                    "No publications found in Semantic Scholar for this name.";
+                return;
+            }
+
+            if (info.error) {
+                container.textContent = info.error;
+                return;
+            }
+
+            const { author, papers } = info;
+            const hIndex = author && typeof author.hIndex === "number"
+                ? author.hIndex
+                : null;
+            const authorUrl = author && author.url;
+
+            let html = "";
+
+            if (hIndex !== null) {
+                if (authorUrl) {
+                    html += `📚 <a href="${authorUrl}" target="_blank" rel="noopener noreferrer">Semantic Scholar author profile (h-index ${hIndex})</a>`;
+                } else {
+                    html += `📚 Semantic Scholar h-index: ${hIndex}`;
+                }
+            } else if (authorUrl) {
+                html += `📚 <a href="${authorUrl}" target="_blank" rel="noopener noreferrer">Semantic Scholar author profile</a>`;
+            }
+
+            if (papers && papers.length) {
+                const paperItems = papers
+                    .map((p) => {
+                        const title = p.title || "Untitled paper";
+                        const year = p.year ? ` (${p.year})` : "";
+                        const url = p.url;
+                        if (url) {
+                            return `<li><a href="${url}" target="_blank" rel="noopener noreferrer">${title}</a>${year}</li>`;
+                        }
+                        return `<li>${title}${year}</li>`;
+                    })
+                    .join("");
+                html +=
+                    `<br />Recent papers:` +
+                    `<ul style="margin: 4px 0 0 16px; padding: 0;">${paperItems}</ul>`;
+            }
+
+            if (!html) {
+                container.textContent =
+                    "Semantic Scholar profile found, but no basic publication info available.";
+            } else {
+                container.innerHTML = html;
+            }
+        }
+
+        window.addEventListener("beforeunload", () => {
+            resetSemanticScholarState();
+        });
 
         // -------------------------
         // Procedure group autocomplete
@@ -1254,7 +1408,26 @@
             updateSelectedCard();
         }
 
+        function scheduleSemanticScholarLookups(docs) {
+            resetSemanticScholarState();
+            if (!docs.length || typeof fetch === "undefined" || typeof AbortController === "undefined") {
+                return;
+            }
+            semanticScholarAbortController = new AbortController();
+
+            docs.forEach((doc, idx) => {
+                const delayMs = idx * 800; // stagger requests ~0.8s apart
+                const timeoutId = setTimeout(() => {
+                    fetchSemanticScholarForDoctor(doc, semanticScholarAbortController.signal);
+                }, delayMs);
+                semanticScholarTimeoutIds.push(timeoutId);
+            });
+        }
+
         function renderDetails(hospital) {
+            // whenever we switch hospitals or clear details, stop any pending Semantic Scholar work
+            resetSemanticScholarState();
+
             if (!hospital) {
                 detailsEmptyEl.style.display = "block";
                 detailsContentEl.style.display = "none";
@@ -1500,17 +1673,28 @@
 
             // Surgeons tab
             facultyListEl.innerHTML = "";
-            const docs = hospital.doctors || [];
+            const docsRaw = hospital.doctors || [];
+
+            // Front-end filter: only surgeons with cases > 10
+            const docs = docsRaw.filter((d) =>
+                d &&
+                d.cases !== null &&
+                d.cases !== undefined &&
+                !isNaN(d.cases) &&
+                Number(d.cases) > 10
+            );
+
             if (!docs.length) {
                 const li = document.createElement("li");
                 li.className = "faculty-item";
                 li.innerHTML =
-                    '<span class="faculty-meta">No surgeons found in this dataset for this hospital and search scope.</span>';
+                    '<span class="faculty-meta">No surgeons with more than 10 Medicare inpatient cases in this scope were found for this hospital.</span>';
                 facultyListEl.appendChild(li);
             } else {
                 docs.forEach((d) => {
                     const li = document.createElement("li");
                     li.className = "faculty-item";
+                    li.dataset.doctorNpi = d.npi || "";
 
                     const compPct = formatPercent(d.complication_rate);
                     const readmitPct = formatPercent(d.readmit_30_rate);
@@ -1548,35 +1732,17 @@
 
                     const casesText =
                         d.cases !== null && d.cases !== undefined
-                            ? `${d.cases} (high-volume, published)`
-                            : "Hidden for privacy (not in top 10% at this hospital)";
-
-                    const highVolumeBadge = d.is_high_volume
-                        ? `<span class="chip chip-strong">High-volume surgeon (top 10% by Medicare volume here)</span>`
-                        : "";
-
-                    const s2 = d.semantic_scholar || {};
-                    const hIdx = s2.h_index;
-                    const s2Url = s2.url;
-                    let hIndexLine = "";
-                    if (hIdx !== null && hIdx !== undefined && !isNaN(hIdx)) {
-                        const label = `Semantic Scholar h-index: ${hIdx}`;
-                        if (s2Url) {
-                            hIndexLine = `<div class="faculty-meta">📚 <a href="${s2Url}" target="_blank" rel="noopener noreferrer">${label}</a></div>`;
-                        } else {
-                            hIndexLine = `<div class="faculty-meta">📚 ${label}</div>`;
-                        }
-                    }
+                            ? `${d.cases} Medicare inpatient case(s) in this scope`
+                            : "Cases not available";
 
                     li.innerHTML = `
             <div class="faculty-name">
               ${d.name || "Unknown surgeon"}
               <span class="chip">NPI ${d.npi || "N/A"}</span>
               ${d.credential ? `<span class="chip">${d.credential}</span>` : ""}
-              ${highVolumeBadge}
             </div>
             <div class="faculty-meta">
-              Cases in dataset: ${casesText}
+              Cases in dataset: ${casesText} (only surgeons with > 10 cases are shown here)
             </div>
             <div class="faculty-impact">
               Complication rate: ${compPct};
@@ -1588,10 +1754,15 @@
               <span class="${readmitClass}">Readmission percentile: ${readmitPctile} ${readmitDir}</span>
               <span class="${mortClass}">Mortality percentile: ${mortPctile} ${mortDir}</span>
             </div>
-            ${hIndexLine}
+            <div class="faculty-meta faculty-semantic-scholar">
+              Looking up publications on Semantic Scholar…
+            </div>
           `;
                     facultyListEl.appendChild(li);
                 });
+
+                // Kick off async Semantic Scholar lookups for these surgeons
+                scheduleSemanticScholarLookups(docs);
             }
         }
 
