@@ -1,0 +1,1694 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Hospital Finder – Medicare Procedure Explorer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --bg: #ffffff;
+            --fg: #202124;
+            --muted: #5f6368;
+            --border: #dadce0;
+            --accent: #1a73e8;
+            --accent-soft: rgba(26, 115, 232, 0.08);
+            --shadow-soft: 0 1px 3px rgba(60, 64, 67, 0.2);
+            --danger: #c5221f;
+            --success: #188038;
+            --warning: #ea8600;
+            --chip-bg: #f1f3f4;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                sans-serif;
+            background: #f5f5f5;
+            color: var(--fg);
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            font-size: 14px;
+            color: var(--muted);
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+        }
+
+        header .logo {
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            color: #202124;
+        }
+
+        header nav a {
+            margin-left: 16px;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+        }
+
+        .top-intro {
+            max-width: 900px;
+            margin: 0 auto 16px auto;
+            text-align: left;
+        }
+
+        .top-intro-title {
+            font-size: 30px;
+            font-weight: 500;
+            letter-spacing: -0.03em;
+            margin-bottom: 4px;
+        }
+
+        .top-intro-subtitle {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .pill-note {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #e8f0fe;
+            color: #174ea6;
+            font-size: 11px;
+            margin-top: 6px;
+        }
+
+        .pill-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #174ea6;
+            margin-right: 6px;
+        }
+
+        .search-shell {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-soft);
+            padding: 16px 20px 14px;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.9fr) minmax(0, 1.3fr);
+            gap: 12px;
+        }
+
+        .field {
+            width: 100%;
+        }
+
+        .field label {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            padding: 9px 14px;
+            font-size: 14px;
+            outline: none;
+            background: #fff;
+        }
+
+        .field input:focus,
+        .field select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px rgba(26, 115, 232, 0.2);
+        }
+
+        .field small {
+            display: block;
+            margin-top: 4px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .search-actions-row {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-left-meta {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .btn-primary {
+            border-radius: 999px;
+            border: 1px solid transparent;
+            padding: 8px 18px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: #185abc;
+        }
+
+        .btn-secondary {
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            background: #f8f9fa;
+            color: var(--muted);
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #e8eaed;
+        }
+
+        .results-layout {
+            max-width: 1100px;
+            margin: 16px auto 24px auto;
+            display: grid;
+            grid-template-columns: minmax(0, 1.45fr) minmax(0, 1.8fr);
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .results-list-shell,
+        .details-shell {
+            background: #ffffff;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            flex-direction: column;
+            min-height: 420px;
+        }
+
+        .panel-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .panel-header-title {
+            font-weight: 500;
+            color: #202124;
+        }
+
+        .panel-header-sub {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .results-list {
+            padding: 10px 8px 10px 8px;
+            overflow-y: auto;
+            max-height: 520px;
+        }
+
+        .results-list-empty {
+            padding: 16px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .hospital-card {
+            border-radius: 14px;
+            border: 1px solid transparent;
+            padding: 10px 12px;
+            margin: 0 4px 8px 4px;
+            cursor: pointer;
+            transition: background 0.12s ease, border-color 0.12s ease,
+                box-shadow 0.12s ease;
+        }
+
+        .hospital-card:hover {
+            background: #f8f9fa;
+            border-color: var(--border);
+        }
+
+        .hospital-card.selected {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            box-shadow: 0 0 0 1px rgba(26, 115, 232, 0.15);
+        }
+
+        .hospital-name-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .hospital-name {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .hospital-rank-chip {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #e8f0fe;
+            color: #174ea6;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        .hospital-meta {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: var(--chip-bg);
+            color: #3c4043;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            white-space: nowrap;
+        }
+
+        .badge-green {
+            background: #e6f4ea;
+            color: var(--success);
+            border-color: rgba(24, 128, 56, 0.16);
+        }
+
+        .badge-amber {
+            background: #fef7e0;
+            color: var(--warning);
+            border-color: rgba(234, 134, 0, 0.16);
+        }
+
+        .badge-red {
+            background: #fce8e6;
+            color: var(--danger);
+            border-color: rgba(197, 34, 31, 0.16);
+        }
+
+        .details-body {
+            padding: 12px 16px 14px 16px;
+            font-size: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .details-empty {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .details-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .details-subtitle {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .detail-block {
+            border-radius: 10px;
+            background: #f8f9fa;
+            padding: 8px 9px;
+            border: 1px solid #eaebef;
+        }
+
+        .detail-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 2px;
+        }
+
+        .detail-label-with-tooltip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .detail-value {
+            font-size: 13px;
+            font-weight: 500;
+            color: #202124;
+        }
+
+        .detail-note {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .details-tabs {
+            margin-top: 8px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .details-tab {
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 999px 999px 0 0;
+            border: 1px solid transparent;
+            border-bottom: none;
+            margin-bottom: -1px;
+            color: var(--muted);
+        }
+
+        .details-tab.active {
+            border-color: var(--border);
+            border-bottom-color: #ffffff;
+            background: #ffffff;
+            color: #202124;
+            font-weight: 500;
+        }
+
+        .details-tab-panel {
+            flex: 1;
+            overflow-y: auto;
+            padding-top: 8px;
+        }
+
+        .metrics-list,
+        .faculty-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            font-size: 12px;
+        }
+
+        .metrics-list li {
+            margin-bottom: 6px;
+        }
+
+        /* Percentile chips with color coding */
+        .metric-pill {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 999px;
+            font-size: 10px;
+            margin-left: 6px;
+            background: #f1f3f4;
+            color: #3c4043;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .metric-pill-good {
+            background: #e6f4ea;
+            color: var(--success);
+            border-color: rgba(24, 128, 56, 0.16);
+        }
+
+        .metric-pill-average {
+            background: #f1f3f4;
+            color: #3c4043;
+            border-color: rgba(0, 0, 0, 0.04);
+        }
+
+        .metric-pill-bad {
+            background: #fce8e6;
+            color: var(--danger);
+            border-color: rgba(197, 34, 31, 0.16);
+        }
+
+        .faculty-item {
+            padding: 6px 0;
+            border-bottom: 1px solid #eceff1;
+        }
+
+        .faculty-name {
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .faculty-meta {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .faculty-impact {
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 2px 8px;
+            background: #e8f0fe;
+            color: #174ea6;
+            font-size: 10px;
+            margin-left: 4px;
+        }
+
+        .chip-strong {
+            background: #e6f4ea;
+            color: var(--success);
+            border: 1px solid rgba(24, 128, 56, 0.16);
+        }
+
+        .explanation-card {
+            margin-top: 8px;
+            border-radius: 10px;
+            border: 1px dashed #c4c7cc;
+            padding: 8px 10px;
+            font-size: 11px;
+            color: var(--muted);
+            background: #fafafa;
+        }
+
+        /* Low-volume suppression panel */
+        .details-suppressed {
+            margin-top: 8px;
+            border-radius: 12px;
+            border: 1px dashed #f9ab00;
+            background: #fef7e0;
+            padding: 10px 12px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .suppressed-icon {
+            font-size: 20px;
+            line-height: 1;
+            margin-top: 1px;
+        }
+
+        .suppressed-title {
+            font-weight: 500;
+            color: #202124;
+            margin-bottom: 2px;
+        }
+
+        /* Simple tooltip */
+        .tooltip-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1px solid #c4c7cc;
+            font-size: 9px;
+            color: #5f6368;
+            cursor: help;
+            position: relative;
+        }
+
+        .tooltip-trigger:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 125%;
+            white-space: normal;
+            min-width: 180px;
+            max-width: 260px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            background: #202124;
+            color: #fff;
+            font-size: 10px;
+            z-index: 20;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .tooltip-trigger:hover::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 115%;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #202124 transparent transparent transparent;
+            z-index: 21;
+        }
+
+        /* Autocomplete for procedure group */
+        .autocomplete-wrapper {
+            position: relative;
+        }
+
+        .autocomplete-list {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 4px);
+            max-height: 220px;
+            overflow-y: auto;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-soft);
+            z-index: 30;
+            font-size: 13px;
+        }
+
+        .autocomplete-item {
+            padding: 6px 10px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .autocomplete-item:hover {
+            background: #f1f3f4;
+        }
+
+        .autocomplete-item-key {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--muted);
+            letter-spacing: 0.06em;
+        }
+
+        .autocomplete-item-label {
+            font-size: 13px;
+        }
+
+        .top-procedures-block {
+            margin-bottom: 10px;
+            margin-top: 4px;
+        }
+
+        .top-procedures-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+            font-size: 11px;
+        }
+
+        .top-procedures-table th,
+        .top-procedures-table td {
+            text-align: left;
+            padding: 4px 4px;
+            border-bottom: 1px solid #eceff1;
+        }
+
+        .top-procedures-table th {
+            font-size: 10px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .top-procedures-empty {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        @media (max-width: 900px) {
+            .search-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .results-layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <header>
+            <div class="logo">Hospital Finder</div>
+            <nav>
+                <a href="/methodology">Methodology</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="top-intro">
+                <div class="top-intro-title">
+                    Find hospitals near you for a specific procedure
+                </div>
+                <div class="top-intro-subtitle">
+                    Powered by Medicare inpatient claims and NPPES. Choose a procedure group
+                    (or leave it blank) and a location to see complication, mortality, and
+                    readmission patterns at nearby hospitals.
+                </div>
+                <div class="pill-note">
+                    <span class="pill-dot"></span>
+                    Uses Google Maps to locate hospitals by distance rather than just city/ZIP.
+                </div>
+            </div>
+
+            <!-- Search card -->
+            <section class="search-shell">
+                <form id="searchForm">
+                    <div class="search-grid">
+                        <!-- Location (Google Places) -->
+                        <div class="field">
+                            <label for="locationInput">Location</label>
+                            <input id="locationInput" type="text"
+                                placeholder="Address, city, or ZIP (choose from dropdown)" autocomplete="off" />
+                            <small>
+                                Start typing and choose a match from Google Maps, or use your current location.
+                            </small>
+                        </div>
+
+                        <!-- Procedure group (autocomplete) -->
+                        <div class="field">
+                            <label for="procedureGroupInput">Procedure group</label>
+                            <div class="autocomplete-wrapper">
+                                <input id="procedureGroupInput" type="text"
+                                    placeholder="e.g., Hip replacement, CABG, Cataract surgery" autocomplete="off" />
+                                <input type="hidden" id="procedureGroupKeyInput" />
+                                <div id="procedureSuggestions" class="autocomplete-list" style="display: none;"></div>
+                            </div>
+                            <small>
+                                Search by procedural family (ICD-10-PCS prefixes) or leave blank to see all tracked
+                                operations.
+                            </small>
+                        </div>
+
+                        <!-- Radius -->
+                        <div class="field">
+                            <label for="radiusSelect">Radius</label>
+                            <select id="radiusSelect">
+                                <option value="10">~10 miles</option>
+                                <option value="25" selected>~25 miles</option>
+                                <option value="50">~50 miles</option>
+                                <option value="100">~100 miles</option>
+                            </select>
+                            <small>We search for hospitals within this driving radius based on geocoded
+                                locations.</small>
+                        </div>
+                    </div>
+
+                    <div class="search-actions-row">
+                        <div class="search-left-meta">
+                            <button type="button" class="btn-secondary" id="useMyLocationBtn">
+                                Use my location
+                            </button>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn-primary">Search hospitals</button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Results + details layout -->
+            <section class="results-layout">
+                <!-- LEFT: Hospitals -->
+                <div class="results-list-shell">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-header-title">Hospitals</div>
+                            <div class="panel-header-sub" id="resultsSummary">
+                                No search yet.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="results-list" id="resultsList">
+                        <div class="results-list-empty">
+                            Run a search to view hospitals near your location. You can search by
+                            procedure group, or leave it blank to see overall patterns.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Details -->
+                <div class="details-shell">
+                    <div class="panel-header">
+                        <div>
+                            <div class="panel-header-title">Hospital profile</div>
+                            <div class="panel-header-sub">
+                                Medicare case volume, complication patterns, and surgeons
+                                performing this procedure group (when available).
+                            </div>
+                        </div>
+                    </div>
+                    <div class="details-body">
+                        <div id="detailsEmpty" class="details-empty">
+                            Select a hospital from the left panel to view its profile.
+                        </div>
+                        <div id="detailsContent" style="display: none">
+                            <div class="details-title" id="detailName"></div>
+                            <div class="details-subtitle" id="detailAddress"></div>
+                            <div class="details-subtitle" id="detailScope"></div>
+
+                            <!-- Low volume / privacy suppression panel -->
+                            <div id="detailsSuppressed" class="details-suppressed" style="display: none;">
+                                <div class="suppressed-icon">👁️‍🗨️</div>
+                                <div>
+                                    <div class="suppressed-title">
+                                        Details hidden for low case volume
+                                    </div>
+                                    <div>
+                                        This hospital has fewer than 11 Medicare inpatient cases in this procedure
+                                        scope. To protect patient privacy, detailed outcomes and surgeon-level
+                                        statistics are not shown.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Metrics, only shown when not suppressed -->
+                            <div id="detailsMetrics">
+                                <div class="details-grid">
+                                    <div class="detail-block">
+                                        <div class="detail-label-with-tooltip">
+                                            <span class="detail-label">Case volume (Medicare)</span>
+                                            <span class="tooltip-trigger"
+                                                data-tooltip="Number of inpatient Medicare claims at this hospital in the search scope (either the chosen procedure group or all tracked procedures).">?</span>
+                                        </div>
+                                        <div class="detail-value" id="detailVolume"></div>
+                                        <div class="detail-note" id="detailVolumeNote"></div>
+                                    </div>
+                                    <div class="detail-block">
+                                        <div class="detail-label-with-tooltip">
+                                            <span class="detail-label">Complication tier</span>
+                                            <span class="tooltip-trigger"
+                                                data-tooltip="Based on any recorded major complication in the same hospital stay. Lower underlying complication rates are better.">?</span>
+                                        </div>
+                                        <div class="detail-value" id="detailComplicationTier"></div>
+                                        <div class="detail-note" id="detailComplicationNote"></div>
+                                    </div>
+                                    <div class="detail-block">
+                                        <div class="detail-label-with-tooltip">
+                                            <span class="detail-label">Mortality & readmission</span>
+                                            <span class="tooltip-trigger"
+                                                data-tooltip="In-hospital mortality and 30-day readmission rates in this dataset. These are raw rates, not risk-adjusted.">?</span>
+                                        </div>
+                                        <div class="detail-value" id="detailMortalityReadmit"></div>
+                                        <div class="detail-note" id="detailMortalityReadmitNote"></div>
+                                    </div>
+                                    <div class="detail-block">
+                                        <div class="detail-label-with-tooltip">
+                                            <span class="detail-label">Cost & length of stay</span>
+                                            <span class="tooltip-trigger"
+                                                data-tooltip="Average Medicare payment amount and mean length of stay (LOS) in this search scope.">?</span>
+                                        </div>
+                                        <div class="detail-value" id="detailCostLos"></div>
+                                        <div class="detail-note" id="detailCostLosNote"></div>
+                                    </div>
+                                </div>
+
+                                <div class="top-procedures-block" id="topProceduresBlock">
+
+                                    <div class="detail-label-with-tooltip">
+                                        <span class="detail-label">Top procedures at this hospital</span>
+                                        <span class="tooltip-trigger"
+                                            data-tooltip="Top 5 procedures at this hospital by Medicare case volume within your current search scope (group or all procedures).">?</span>
+                                    </div>
+                                    <table class="top-procedures-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Procedure</th>
+                                                <th>PCS</th>
+                                                <th>Cases</th>
+                                                <th>Complication</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="topProceduresBody"></tbody>
+                                    </table>
+                                    <div id="topProceduresEmpty" class="top-procedures-empty" style="display: none;">
+                                        No procedure detail available for this hospital in the current dataset.
+                                    </div>
+                                </div>
+
+                                <div class="details-tabs">
+                                    <div class="details-tab active" data-tab="quality">
+                                        Quality & distribution
+                                    </div>
+                                    <div class="details-tab" data-tab="faculty">Surgeons</div>
+                                </div>
+
+                                <div class="details-tab-panel" id="tabQuality">
+                                    <ul class="metrics-list" id="qualityMetrics"></ul>
+                                    <div class="explanation-card" id="distributionExplanation">
+                                        Percentiles are calculated among all hospitals in this dataset that
+                                        fall into the same search scope (either the selected procedure group
+                                        or all tracked procedures). A 10th percentile complication rate means
+                                        the hospital has fewer complications than about 90% of its peers
+                                        (lower is better).
+                                    </div>
+                                </div>
+
+                                <div class="details-tab-panel" id="tabFaculty" style="display: none">
+                                    <ul class="faculty-list" id="facultyList"></ul>
+                                    <div class="explanation-card">
+                                        Surgeons listed here are those with Medicare inpatient claims
+                                        for procedures in this search scope at this hospital. This is not
+                                        a complete physician directory.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function badgeClassForComplication(tier) {
+            if (!tier) return "badge";
+            const t = tier.toLowerCase();
+            if (t.includes("low")) return "badge badge-green";
+            if (t.includes("high") || t.includes("worse")) return "badge badge-red";
+            if (t.includes("suppress")) return "badge badge-amber";
+            return "badge badge-amber";
+        }
+
+        function formatPercent(num, digits = 1) {
+            if (num === null || num === undefined || isNaN(num)) return "N/A";
+            return `${Number(num).toFixed(digits)}%`;
+        }
+
+        function formatDays(num) {
+            if (num === null || num === undefined || isNaN(num)) return "N/A";
+            return `${Number(num).toFixed(1)} days`;
+        }
+
+        function formatMoney(num) {
+            if (num === null || num === undefined || isNaN(num)) return "N/A";
+            return `$${Number(num).toFixed(0)}`;
+        }
+
+        function formatPercentile(num) {
+            if (num === null || num === undefined || isNaN(num)) return "N/A";
+            return `${Number(num).toFixed(1)}th percentile`;
+        }
+
+        function percentileDirectionLabel(num) {
+            if (num === null || num === undefined || isNaN(num)) return "";
+            const val = Number(num);
+            if (val <= 20) return "(among the best in dataset)";
+            if (val <= 40) return "(better than average)";
+            if (val >= 80) return "(worse than most peers)";
+            if (val >= 60) return "(worse than average)";
+            return "(around average)";
+        }
+
+        function classForPercentile(num) {
+            if (num === null || num === undefined || isNaN(num)) {
+                return "metric-pill";
+            }
+            const v = Number(num);
+            if (v <= 20) return "metric-pill metric-pill-good";
+            if (v >= 80) return "metric-pill metric-pill-bad";
+            return "metric-pill metric-pill-average";
+        }
+
+        const resultsListEl = document.getElementById("resultsList");
+        const resultsSummaryEl = document.getElementById("resultsSummary");
+        const detailsEmptyEl = document.getElementById("detailsEmpty");
+        const detailsContentEl = document.getElementById("detailsContent");
+        const detailsMetricsEl = document.getElementById("detailsMetrics");
+        const detailsSuppressedEl = document.getElementById("detailsSuppressed");
+
+        const detailNameEl = document.getElementById("detailName");
+        const detailAddressEl = document.getElementById("detailAddress");
+        const detailScopeEl = document.getElementById("detailScope");
+        const detailVolumeEl = document.getElementById("detailVolume");
+        const detailVolumeNoteEl = document.getElementById("detailVolumeNote");
+        const detailComplicationTierEl = document.getElementById("detailComplicationTier");
+        const detailComplicationNoteEl = document.getElementById("detailComplicationNote");
+        const detailMortalityReadmitEl = document.getElementById("detailMortalityReadmit");
+        const detailMortalityReadmitNoteEl = document.getElementById("detailMortalityReadmitNote");
+        const detailCostLosEl = document.getElementById("detailCostLos");
+        const detailCostLosNoteEl = document.getElementById("detailCostLosNote");
+
+        const qualityMetricsEl = document.getElementById("qualityMetrics");
+        const facultyListEl = document.getElementById("facultyList");
+        const topProceduresBlockEl = document.getElementById("topProceduresBlock");
+
+        const topProceduresBodyEl = document.getElementById("topProceduresBody");
+        const topProceduresEmptyEl = document.getElementById("topProceduresEmpty");
+
+        const searchForm = document.getElementById("searchForm");
+        const locationInput = document.getElementById("locationInput");
+        const procedureGroupInput = document.getElementById("procedureGroupInput");
+        const procedureGroupKeyInput = document.getElementById("procedureGroupKeyInput");
+        const procedureSuggestionsEl = document.getElementById("procedureSuggestions");
+        const radiusSelect = document.getElementById("radiusSelect");
+        const useMyLocationBtn = document.getElementById("useMyLocationBtn");
+
+        const tabs = document.querySelectorAll(".details-tab");
+        const tabQualityEl = document.getElementById("tabQuality");
+        const tabFacultyEl = document.getElementById("tabFaculty");
+
+        let currentResults = [];
+        let selectedHospitalIndex = null;
+
+        let allProcedureGroups = [];
+        let selectedCoords = null; // { lat, lng }
+        let lastRadiusMiles = 25;
+
+        let gMapsAutocomplete = null;
+        let gMapsGeocoder = null;
+
+        // -------------------------
+        // Procedure group autocomplete
+        // -------------------------
+        async function loadProcedureGroups() {
+            try {
+                const resp = await fetch("/api/procedure-groups");
+                const data = await resp.json();
+                allProcedureGroups = data.groups || [];
+            } catch (e) {
+                console.error("Failed to load procedure groups", e);
+            }
+        }
+
+        function hideProcedureSuggestions() {
+            procedureSuggestionsEl.style.display = "none";
+            procedureSuggestionsEl.innerHTML = "";
+        }
+
+        function showProcedureSuggestions(matches) {
+            if (!matches.length) {
+                hideProcedureSuggestions();
+                return;
+            }
+            procedureSuggestionsEl.innerHTML = "";
+            matches.forEach((g) => {
+                const item = document.createElement("div");
+                item.className = "autocomplete-item";
+                item.innerHTML = `
+          <span class="autocomplete-item-label">${g.label}</span>
+          <span class="autocomplete-item-key">${g.key}</span>
+        `;
+                item.addEventListener("click", () => {
+                    procedureGroupInput.value = g.label;
+                    procedureGroupKeyInput.value = g.key;
+                    hideProcedureSuggestions();
+                });
+                procedureSuggestionsEl.appendChild(item);
+            });
+            procedureSuggestionsEl.style.display = "block";
+        }
+
+        procedureGroupInput.addEventListener("input", () => {
+            const value = (procedureGroupInput.value || "").trim().toLowerCase();
+            procedureGroupKeyInput.value = "";
+            if (!value) {
+                hideProcedureSuggestions();
+                return;
+            }
+            const matches = allProcedureGroups
+                .filter((g) => {
+                    return (
+                        g.label.toLowerCase().includes(value) ||
+                        g.key.toLowerCase().includes(value)
+                    );
+                })
+                .slice(0, 8);
+            showProcedureSuggestions(matches);
+        });
+
+        procedureGroupInput.addEventListener("blur", () => {
+            // Hide suggestions a bit after blur so click can register if needed
+            setTimeout(() => {
+                hideProcedureSuggestions();
+            }, 150);
+        });
+
+        // -------------------------
+        // Google Maps integration
+        // -------------------------
+        function initMaps() {
+            if (!window.google) return;
+
+            if (locationInput) {
+                gMapsAutocomplete = new google.maps.places.Autocomplete(locationInput, {
+                    fields: ["geometry", "formatted_address", "name"],
+                    types: ["geocode"],
+                });
+
+                gMapsAutocomplete.addListener("place_changed", () => {
+                    const place = gMapsAutocomplete.getPlace();
+                    if (!place || !place.geometry || !place.geometry.location) {
+                        return;
+                    }
+                    const lat = place.geometry.location.lat();
+                    const lng = place.geometry.location.lng();
+                    selectedCoords = { lat, lng };
+                    // Overwrite with nicely formatted address if available
+                    if (place.formatted_address) {
+                        locationInput.value = place.formatted_address;
+                    }
+                });
+            }
+
+            gMapsGeocoder = new google.maps.Geocoder();
+
+            useMyLocationBtn.addEventListener("click", () => {
+                if (!navigator.geolocation) {
+                    alert("Geolocation is not supported by your browser.");
+                    return;
+                }
+                useMyLocationBtn.disabled = true;
+                useMyLocationBtn.textContent = "Locating…";
+
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        selectedCoords = { lat, lng };
+
+                        if (gMapsGeocoder) {
+                            gMapsGeocoder.geocode(
+                                { location: { lat, lng } },
+                                (results, status) => {
+                                    if (status === "OK" && results && results[0]) {
+                                        locationInput.value = results[0].formatted_address;
+                                    } else {
+                                        locationInput.value = "Current location";
+                                    }
+                                }
+                            );
+                        } else {
+                            locationInput.value = "Current location";
+                        }
+
+                        useMyLocationBtn.disabled = false;
+                        useMyLocationBtn.textContent = "Use my location";
+                    },
+                    (err) => {
+                        console.error(err);
+                        alert("Could not get your location. Please check browser permissions.");
+                        useMyLocationBtn.disabled = false;
+                        useMyLocationBtn.textContent = "Use my location";
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            });
+        }
+
+        // Expose to Google Maps callback
+        window.initMaps = initMaps;
+
+        // -------------------------
+        // Tabs
+        // -------------------------
+        tabs.forEach((tab) => {
+            tab.addEventListener("click", () => {
+                tabs.forEach((t) => t.classList.remove("active"));
+                tab.classList.add("active");
+                const which = tab.dataset.tab;
+                if (which === "quality") {
+                    tabQualityEl.style.display = "block";
+                    tabFacultyEl.style.display = "none";
+                } else {
+                    tabQualityEl.style.display = "none";
+                    tabFacultyEl.style.display = "block";
+                }
+            });
+        });
+
+        // -------------------------
+        // Rendering helpers
+        // -------------------------
+        function updateSelectedCard() {
+            const cards = resultsListEl.querySelectorAll(".hospital-card");
+            cards.forEach((card) => {
+                const idx = Number(card.dataset.index);
+                card.classList.toggle("selected", idx === selectedHospitalIndex);
+            });
+        }
+
+        function renderResultsList(hospitals, searchScope, groupLabel, radiusMiles) {
+            resultsListEl.innerHTML = "";
+            if (!hospitals.length) {
+                resultsListEl.innerHTML =
+                    '<div class="results-list-empty">No hospitals matched this search. Try a different radius or location.</div>';
+                resultsSummaryEl.textContent = "0 hospitals found.";
+                selectedHospitalIndex = null;
+                renderDetails(null);
+                return;
+            }
+
+            hospitals.forEach((h, idx) => {
+                const card = document.createElement("div");
+                card.className = "hospital-card";
+                card.dataset.index = idx;
+
+                const complicationBadgeClass = badgeClassForComplication(
+                    h.complication_tier
+                );
+                const addressLine = [h.city, h.state, h.postal_code]
+                    .filter(Boolean)
+                    .join(", ");
+
+                const distanceLabel =
+                    h.distance_km !== null && h.distance_km !== undefined && !isNaN(h.distance_km)
+                        ? `${h.distance_km.toFixed(1)} km away`
+                        : "Distance unknown";
+
+                const rankLabel = `#${idx + 1} in this search`;
+                const casesText =
+                    h.cases !== null && h.cases !== undefined && !isNaN(h.cases)
+                        ? (h.cases < 11 ? "< 11 (suppressed)" : h.cases)
+                        : "N/A";
+
+                card.innerHTML = `
+          <div class="hospital-name-row">
+            <div class="hospital-name">${h.hospital_name || "(Unknown hospital name)"}</div>
+            <div class="hospital-rank-chip">${rankLabel}</div>
+          </div>
+          <div class="hospital-meta">
+            ${addressLine || "No address available"} · ${distanceLabel}
+          </div>
+          <div class="badge-row">
+            <span class="badge">Volume: ${h.volume_category || "Unknown"}</span>
+            <span class="${complicationBadgeClass}">${h.complication_tier || "Complications N/A"}</span>
+            <span class="badge">Cases: ${casesText}</span>
+          </div>
+        `;
+
+                card.addEventListener("click", () => {
+                    selectedHospitalIndex = idx;
+                    updateSelectedCard();
+                    renderDetails(h);
+                });
+
+                resultsListEl.appendChild(card);
+            });
+
+            const scopeText =
+                searchScope === "group"
+                    ? groupLabel || "selected procedure group"
+                    : "all tracked procedures";
+            resultsSummaryEl.textContent = `${hospitals.length} hospital${hospitals.length === 1 ? "" : "s"
+                } within ~${radiusMiles} miles. Sorted by quality (complication rate) and distance, for ${scopeText}.`;
+            updateSelectedCard();
+        }
+
+        function renderDetails(hospital) {
+            if (!hospital) {
+                detailsEmptyEl.style.display = "block";
+                detailsContentEl.style.display = "none";
+                return;
+            }
+
+            detailsEmptyEl.style.display = "none";
+            detailsContentEl.style.display = "block";
+
+            detailNameEl.textContent = hospital.hospital_name || "(Unknown hospital)";
+            const addr =
+                hospital.full_address ||
+                [hospital.city, hospital.state, hospital.postal_code]
+                    .filter(Boolean)
+                    .join(", ");
+            detailAddressEl.textContent = addr || "Address not available";
+
+            const scopeLabel = hospital.procedure_group_label
+                ? `Scope: ${hospital.procedure_group_label}`
+                : "Scope: All tracked inpatient procedures at this hospital (Medicare data)";
+            detailScopeEl.textContent = scopeLabel;
+
+            const caseCount =
+                hospital.cases !== null &&
+                    hospital.cases !== undefined &&
+                    !isNaN(hospital.cases)
+                    ? Number(hospital.cases)
+                    : null;
+            const isLowVolume = caseCount === null || caseCount < 11;
+
+            // If low volume, mask details and bail early after setting summary labels
+            if (isLowVolume) {
+                detailsSuppressedEl.style.display = "flex";
+                detailsMetricsEl.style.display = "none";
+
+                const volumeLabel =
+                    caseCount !== null
+                        ? "Very low volume (suppressed)"
+                        : "Volume unknown (suppressed)";
+                detailVolumeEl.textContent = volumeLabel;
+                detailVolumeNoteEl.textContent =
+                    "Fewer than 11 Medicare inpatient cases in this search scope. Detailed outcomes and surgeon metrics are hidden.";
+
+                detailComplicationTierEl.textContent = "Not shown (low volume)";
+                detailComplicationNoteEl.textContent =
+                    "Complication data is suppressed when there are fewer than 11 cases, to protect patient privacy.";
+
+                detailMortalityReadmitEl.textContent = "Not shown (low volume)";
+                detailMortalityReadmitNoteEl.textContent = "";
+
+                detailCostLosEl.textContent = "Not shown (low volume)";
+                detailCostLosNoteEl.textContent = "";
+
+                qualityMetricsEl.innerHTML = "";
+                facultyListEl.innerHTML = "";
+                topProceduresBodyEl.innerHTML = "";
+                topProceduresEmptyEl.style.display = "block";
+                topProceduresEmptyEl.textContent =
+                    "Details for individual procedures are hidden because of low case volume.";
+
+                return;
+            } else {
+                detailsSuppressedEl.style.display = "none";
+                detailsMetricsEl.style.display = "block";
+            }
+
+            // Volume
+            const volumeLabel = hospital.volume_category
+                ? `${hospital.volume_category} volume`
+                : "Volume unknown";
+            detailVolumeEl.textContent = volumeLabel;
+            detailVolumeNoteEl.textContent = `${hospital.cases !== null && hospital.cases !== undefined
+                ? hospital.cases
+                : "N/A"
+                } Medicare inpatient claim(s) in this search scope.`;
+
+            // Complication tier + explanation
+            detailComplicationTierEl.textContent =
+                hospital.complication_tier || "N/A";
+            const compPct = formatPercent(hospital.complication_rate);
+            const compPctile = formatPercentile(
+                hospital.complication_rate_pctile_rank
+            );
+            const compDir = percentileDirectionLabel(
+                hospital.complication_rate_pctile_rank
+            );
+            detailComplicationNoteEl.textContent = `Any complication rate: ${compPct}. Percentile vs. peers in this scope: ${compPctile} ${compDir}`.trim();
+
+            // Mortality & readmission
+            const mortStr = formatPercent(hospital.mortality_rate);
+            const readmitStr = formatPercent(hospital.readmit_30_rate);
+            detailMortalityReadmitEl.textContent = `${mortStr} in-hospital mortality, ${readmitStr} 30-day readmission.`;
+
+            const mortPctile = formatPercentile(
+                hospital.mortality_rate_pctile_rank
+            );
+            const mortDir = percentileDirectionLabel(
+                hospital.mortality_rate_pctile_rank
+            );
+            const readmitPctile = formatPercentile(
+                hospital.readmit_30_rate_pctile_rank
+            );
+            const readmitDir = percentileDirectionLabel(
+                hospital.readmit_30_rate_pctile_rank
+            );
+            detailMortalityReadmitNoteEl.textContent = `Mortality percentile: ${mortPctile} ${mortDir}. Readmission percentile: ${readmitPctile} ${readmitDir}`.trim();
+
+            // Cost & LOS
+            const costStr = formatMoney(hospital.avg_cost);
+            const losStr = formatDays(hospital.avg_LOS);
+            detailCostLosEl.textContent = `${costStr} mean payment, ${losStr} mean LOS.`;
+
+            const medianCostStr =
+                hospital.median_cost !== null &&
+                    hospital.median_cost !== undefined &&
+                    !isNaN(hospital.median_cost)
+                    ? `${formatMoney(hospital.median_cost)} median claim`
+                    : null;
+            const medianLosStr =
+                hospital.median_LOS !== null &&
+                    hospital.median_LOS !== undefined &&
+                    !isNaN(hospital.median_LOS)
+                    ? `${formatDays(hospital.median_LOS)} median LOS`
+                    : null;
+
+            const costPctile = formatPercentile(hospital.avg_cost_pctile_rank);
+            const costDir = percentileDirectionLabel(
+                hospital.avg_cost_pctile_rank
+            );
+            const losPctile = formatPercentile(hospital.avg_LOS_pctile_rank);
+            const losDir = percentileDirectionLabel(hospital.avg_LOS_pctile_rank);
+
+            const extras = [
+                medianCostStr,
+                medianLosStr,
+                `Cost percentile: ${costPctile} ${costDir}`.trim(),
+                `LOS percentile: ${losPctile} ${losDir}`.trim(),
+            ].filter(Boolean);
+            detailCostLosNoteEl.textContent = extras.join(" · ");
+
+            // Quality metrics list (with percentile color coding)
+            qualityMetricsEl.innerHTML = "";
+            const metrics = [
+                {
+                    label: "Any complication rate",
+                    value: formatPercent(hospital.complication_rate),
+                    pctile: hospital.complication_rate_pctile_rank,
+                    explanation:
+                        "Lower is better. Percentile is vs. hospitals in this search scope.",
+                },
+                {
+                    label: "30-day readmission rate",
+                    value: formatPercent(hospital.readmit_30_rate),
+                    pctile: hospital.readmit_30_rate_pctile_rank,
+                    explanation:
+                        "Lower is better. Measures the share of patients readmitted within 30 days.",
+                },
+                {
+                    label: "In-hospital mortality rate",
+                    value: formatPercent(hospital.mortality_rate),
+                    pctile: hospital.mortality_rate_pctile_rank,
+                    explanation:
+                        "Lower is better. Measures in-hospital deaths in this scope.",
+                },
+                {
+                    label: "Mean length of stay",
+                    value: formatDays(hospital.avg_LOS),
+                    pctile: hospital.avg_LOS_pctile_rank,
+                    explanation:
+                        "Lower can indicate faster recovery, but also depends on case mix and discharge patterns.",
+                },
+                {
+                    label: "Mean Medicare payment",
+                    value: formatMoney(hospital.avg_cost),
+                    pctile: hospital.avg_cost_pctile_rank,
+                    explanation:
+                        "Lower payments may reflect lower resource use or lower negotiated rates.",
+                },
+            ];
+
+            metrics.forEach((m) => {
+                const li = document.createElement("li");
+                const pctileStr = formatPercentile(m.pctile);
+                const dirLabel = percentileDirectionLabel(m.pctile);
+                const pillText =
+                    pctileStr === "N/A" ? "Percentile: N/A" : `${pctileStr} ${dirLabel}`;
+                const pillClass = classForPercentile(m.pctile);
+                li.innerHTML = `
+          <span>${m.label}: <strong>${m.value}</strong></span>
+          <span class="${pillClass}" title="${m.explanation}">
+            ${pillText}
+          </span>
+        `;
+                qualityMetricsEl.appendChild(li);
+            });
+
+            // Top procedures table
+            topProceduresBodyEl.innerHTML = "";
+            const procs = hospital.top_procedures || [];
+
+            // If truly no procedures at all
+            if (!procs.length) {
+                topProceduresEmptyEl.style.display = "block";
+                topProceduresEmptyEl.textContent =
+                    "No procedure detail available for this hospital in the current dataset.";
+                return;
+            }
+
+            // Filter to only high-volume procedures (> 10 cases)
+            const highVolumeProcs = procs.filter(p =>
+                p.cases !== null &&
+                p.cases !== undefined &&
+                !isNaN(p.cases) &&
+                Number(p.cases) > 10
+            );
+
+            if (!highVolumeProcs.length) {
+                // There WERE procedures, but none had >10 cases
+                topProceduresEmptyEl.style.display = "block";
+                topProceduresEmptyEl.textContent =
+                    "Procedure volume is too low to show top procedures (must exceed 10 total cases).";
+                return;
+            }
+
+            // Otherwise, show the filtered procedures
+            topProceduresEmptyEl.style.display = "none";
+
+            highVolumeProcs.forEach((p) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+        <td>${p.short_title || "(Unknown procedure)"}</td>
+        <td>${p.operation_pcs || ""}</td>
+        <td>${p.cases !== null &&
+                        p.cases !== undefined &&
+                        !isNaN(p.cases)
+                        ? Number(p.cases).toFixed(0)
+                        : "N/A"
+                    }</td>
+        <td>${formatPercent(p.complication_rate)}</td>
+    `;
+                topProceduresBodyEl.appendChild(tr);
+            });
+
+            // Surgeons tab
+            facultyListEl.innerHTML = "";
+            const docs = hospital.doctors || [];
+            if (!docs.length) {
+                const li = document.createElement("li");
+                li.className = "faculty-item";
+                li.innerHTML =
+                    '<span class="faculty-meta">No surgeons found in this dataset for this hospital and search scope.</span>';
+                facultyListEl.appendChild(li);
+            } else {
+                docs.forEach((d) => {
+                    const li = document.createElement("li");
+                    li.className = "faculty-item";
+
+                    const compPct = formatPercent(d.complication_rate);
+                    const readmitPct = formatPercent(d.readmit_30_rate);
+                    const losStr = formatDays(d.avg_LOS);
+
+                    const compPctile = formatPercentile(
+                        d.complication_rate_pctile_rank
+                    );
+                    const compDir = percentileDirectionLabel(
+                        d.complication_rate_pctile_rank
+                    );
+                    const compClass = classForPercentile(
+                        d.complication_rate_pctile_rank
+                    );
+
+                    const readmitPctile = formatPercentile(
+                        d.readmit_30_rate_pctile_rank
+                    );
+                    const readmitDir = percentileDirectionLabel(
+                        d.readmit_30_rate_pctile_rank
+                    );
+                    const readmitClass = classForPercentile(
+                        d.readmit_30_rate_pctile_rank
+                    );
+
+                    const mortPctile = formatPercentile(
+                        d.mortality_rate_pctile_rank
+                    );
+                    const mortDir = percentileDirectionLabel(
+                        d.mortality_rate_pctile_rank
+                    );
+                    const mortClass = classForPercentile(
+                        d.mortality_rate_pctile_rank
+                    );
+
+                    const casesText =
+                        d.cases !== null && d.cases !== undefined
+                            ? `${d.cases} (high-volume, published)`
+                            : "Hidden for privacy (not in top 10% at this hospital)";
+
+                    const highVolumeBadge = d.is_high_volume
+                        ? `<span class="chip chip-strong">High-volume surgeon (top 10% by Medicare volume here)</span>`
+                        : "";
+
+                    const s2 = d.semantic_scholar || {};
+                    const hIdx = s2.h_index;
+                    const s2Url = s2.url;
+                    let hIndexLine = "";
+                    if (hIdx !== null && hIdx !== undefined && !isNaN(hIdx)) {
+                        const label = `Semantic Scholar h-index: ${hIdx}`;
+                        if (s2Url) {
+                            hIndexLine = `<div class="faculty-meta">📚 <a href="${s2Url}" target="_blank" rel="noopener noreferrer">${label}</a></div>`;
+                        } else {
+                            hIndexLine = `<div class="faculty-meta">📚 ${label}</div>`;
+                        }
+                    }
+
+                    li.innerHTML = `
+            <div class="faculty-name">
+              ${d.name || "Unknown surgeon"}
+              <span class="chip">NPI ${d.npi || "N/A"}</span>
+              ${d.credential ? `<span class="chip">${d.credential}</span>` : ""}
+              ${highVolumeBadge}
+            </div>
+            <div class="faculty-meta">
+              Cases in dataset: ${casesText}
+            </div>
+            <div class="faculty-impact">
+              Complication rate: ${compPct};
+              Readmit 30d: ${readmitPct};
+              Mean LOS: ${losStr}
+            </div>
+            <div class="faculty-meta">
+              <span class="${compClass}">Complication percentile: ${compPctile} ${compDir}</span>
+              <span class="${readmitClass}">Readmission percentile: ${readmitPctile} ${readmitDir}</span>
+              <span class="${mortClass}">Mortality percentile: ${mortPctile} ${mortDir}</span>
+            </div>
+            ${hIndexLine}
+          `;
+                    facultyListEl.appendChild(li);
+                });
+            }
+        }
+
+        // -------------------------
+        // Search behavior
+        // -------------------------
+        searchForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            // Ensure we have coordinates (either from Places or geolocation)
+            if (!selectedCoords) {
+                alert(
+                    "Please choose a location from the Google Maps dropdown or use the 'Use my location' button."
+                );
+                return;
+            }
+
+            // Resolve procedure group key
+            let groupKey = (procedureGroupKeyInput.value || "").trim();
+            const labelTyped = (procedureGroupInput.value || "").trim().toLowerCase();
+
+            if (!groupKey && labelTyped) {
+                // Try to match typed text to a group label/key
+                const match = allProcedureGroups.find(
+                    (g) =>
+                        g.label.toLowerCase().startsWith(labelTyped) ||
+                        g.label.toLowerCase() === labelTyped ||
+                        g.key.toLowerCase() === labelTyped
+                );
+                if (match) {
+                    groupKey = match.key;
+                    procedureGroupKeyInput.value = match.key;
+                    procedureGroupInput.value = match.label;
+                } else {
+                    alert(
+                        "Please pick a procedure group from the suggestions, or clear the field to search all procedures."
+                    );
+                    return;
+                }
+            }
+
+            const radiusMiles = Number(radiusSelect.value) || 25;
+            const radiusKm = radiusMiles * 1.60934;
+            lastRadiusMiles = radiusMiles;
+
+            const params = new URLSearchParams({
+                lat: String(selectedCoords.lat),
+                lng: String(selectedCoords.lng),
+                radius_km: String(radiusKm),
+            });
+            if (groupKey) {
+                params.set("group", groupKey);
+            }
+
+            resultsSummaryEl.textContent = "Searching…";
+            resultsListEl.innerHTML =
+                '<div class="results-list-empty">Searching for hospitals…</div>';
+            renderDetails(null);
+
+            try {
+                const resp = await fetch(`/api/search?${params.toString()}`);
+                const data = await resp.json();
+
+                if (!resp.ok) {
+                    throw new Error(data.error || "Search failed");
+                }
+
+                currentResults = data.hospitals || [];
+                selectedHospitalIndex = currentResults.length ? 0 : null;
+                renderResultsList(
+                    currentResults,
+                    data.search_scope,
+                    data.procedure_group_label,
+                    radiusMiles
+                );
+                if (currentResults.length) {
+                    renderDetails(currentResults[0]);
+                } else {
+                    renderDetails(null);
+                }
+            } catch (err) {
+                console.error(err);
+                resultsListEl.innerHTML = `<div class="results-list-empty">Error performing search: ${err.message}</div>`;
+                resultsSummaryEl.textContent = "Search error.";
+                renderDetails(null);
+            }
+        });
+
+        // -------------------------
+        // Init
+        // -------------------------
+        loadProcedureGroups();
+    </script>
+
+    <!-- Google Maps JS with Places library; replace YOUR_GOOGLE_MAPS_API_KEY -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAEOXGow_XzPTrH4hFgjeQVM-g6JF_NL-Y&libraries=places&callback=initMaps"></script>
+</body>
+
+</html>
