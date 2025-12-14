@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 import os
 import re
+import time
+import secrets
 from pathlib import Path
 from math import radians, sin, cos, asin, sqrt
+from functools import wraps
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # -------------------------------------------------------------------
 # Config
@@ -19,6 +24,149 @@ HOSPITAL_CSV = DATA_DIR / "hospital_metrics_geocoded.csv"
 PROVIDER_CSV = DATA_DIR / "provider_metrics.csv"
 
 app = Flask(__name__)
+
+# Secret key for sessions - in production, use environment variable
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
+
+# -------------------------------------------------------------------
+# Authentication Configuration
+# -------------------------------------------------------------------
+# Store hashed password (never store plaintext!)
+AUTH_USERNAME = "neuroinnovate"
+AUTH_PASSWORD_HASH = generate_password_hash("mobydon", method='pbkdf2:sha256')
+
+# Rate limiting configuration
+MAX_FAILED_ATTEMPTS = 10
+LOCKOUT_DURATION_SECONDS = 10 * 60  # 10 minutes
+
+# In-memory store for rate limiting (use Redis in production for multi-worker)
+# Structure: { ip_address: { 'attempts': int, 'lockout_until': float, 'last_attempt': float } }
+login_attempts = defaultdict(lambda: {'attempts': 0, 'lockout_until': 0, 'last_attempt': 0})
+
+
+# -------------------------------------------------------------------
+# Authentication Helpers
+# -------------------------------------------------------------------
+def get_client_ip():
+    """Get the client's IP address, accounting for proxies."""
+    if request.headers.get('X-Forwarded-For'):
+        return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+    return request.remote_addr or 'unknown'
+
+
+def is_locked_out(ip):
+    """Check if an IP is currently locked out."""
+    record = login_attempts[ip]
+    if record['lockout_until'] > time.time():
+        return True
+    return False
+
+
+def get_lockout_remaining(ip):
+    """Get remaining lockout time in seconds."""
+    record = login_attempts[ip]
+    remaining = record['lockout_until'] - time.time()
+    return max(0, int(remaining))
+
+
+def record_failed_attempt(ip):
+    """Record a failed login attempt and potentially trigger lockout."""
+    record = login_attempts[ip]
+    record['attempts'] += 1
+    record['last_attempt'] = time.time()
+    
+    if record['attempts'] >= MAX_FAILED_ATTEMPTS:
+        record['lockout_until'] = time.time() + LOCKOUT_DURATION_SECONDS
+        return True  # Locked out
+    return False
+
+
+def reset_attempts(ip):
+    """Reset failed attempts on successful login."""
+    login_attempts[ip] = {'attempts': 0, 'lockout_until': 0, 'last_attempt': 0}
+
+
+def get_remaining_attempts(ip):
+    """Get remaining login attempts before lockout."""
+    record = login_attempts[ip]
+    return max(0, MAX_FAILED_ATTEMPTS - record['attempts'])
+
+
+def login_required(f):
+    """Decorator to require authentication for routes."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('authenticated'):
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+# -------------------------------------------------------------------
+# Authentication Routes
+# -------------------------------------------------------------------
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Handle login page and authentication."""
+    ip = get_client_ip()
+    error = None
+    remaining_attempts = get_remaining_attempts(ip)
+    
+    # Check if locked out
+    if is_locked_out(ip):
+        remaining_time = get_lockout_remaining(ip)
+        minutes = remaining_time // 60
+        seconds = remaining_time % 60
+        return render_template('login.html', 
+                             error=f"Too many failed attempts. Access blocked for {minutes}m {seconds}s.",
+                             locked_out=True,
+                             remaining_time=remaining_time), 429
+    
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        
+        # Validate credentials
+        if username == AUTH_USERNAME and check_password_hash(AUTH_PASSWORD_HASH, password):
+            # Successful login
+            reset_attempts(ip)
+            session['authenticated'] = True
+            session['username'] = username
+            session.permanent = True  # Use permanent session
+            
+            # Redirect to next page or home
+            next_page = request.args.get('next')
+            if next_page and next_page.startswith('/'):
+                return redirect(next_page)
+            return redirect(url_for('index'))
+        else:
+            # Failed login
+            locked = record_failed_attempt(ip)
+            remaining_attempts = get_remaining_attempts(ip)
+            
+            if locked:
+                remaining_time = get_lockout_remaining(ip)
+                minutes = remaining_time // 60
+                seconds = remaining_time % 60
+                return render_template('login.html',
+                                     error=f"Too many failed attempts. Access blocked for {minutes}m {seconds}s.",
+                                     locked_out=True,
+                                     remaining_time=remaining_time), 429
+            else:
+                error = f"Invalid username or password. {remaining_attempts} attempt(s) remaining."
+    
+    return render_template('login.html', 
+                         error=error, 
+                         remaining_attempts=remaining_attempts,
+                         locked_out=False)
+
+
+@app.route('/logout')
+def logout():
+    """Handle logout."""
+    session.clear()
+    return redirect(url_for('login'))
+
 
 #
 # PROCEDURE GROUPS (by ICD-10-PCS prefix)
@@ -271,20 +419,23 @@ if "lat" not in hospital_df.columns or "lng" not in hospital_df.columns:
 hospital_df = hospital_df.dropna(subset=["lat", "lng"])
 
 # -------------------------------------------------------------------
-# Routes
+# Routes (Protected)
 # -------------------------------------------------------------------
 @app.route("/")
+@login_required
 def index():
     # expects templates/index.html
     return render_template("index.html")
 
 
 @app.route("/methodology")
+@login_required
 def methodology():
     return render_template("methodology.html")
 
 
 @app.route("/api/procedure-groups")
+@login_required
 def api_procedure_groups():
     """
     Return the available procedure groups for the autocomplete.
@@ -304,6 +455,7 @@ def api_procedure_groups():
 
 
 @app.route("/api/search")
+@login_required
 def api_search():
     """
     Query params:

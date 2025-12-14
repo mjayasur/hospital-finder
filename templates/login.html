@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Login – Hospital Finder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --bg: #ffffff;
+            --fg: #202124;
+            --muted: #5f6368;
+            --border: #dadce0;
+            --accent: #1a73e8;
+            --accent-soft: rgba(26, 115, 232, 0.08);
+            --shadow-soft: 0 1px 3px rgba(60, 64, 67, 0.2);
+            --danger: #c5221f;
+            --danger-bg: #fce8e6;
+            --success: #188038;
+            --warning: #ea8600;
+            --warning-bg: #fef7e0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f5f5;
+            color: var(--fg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--bg);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-soft);
+            padding: 32px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .login-logo {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            color: #202124;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .form-group input {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            font-size: 15px;
+            outline: none;
+            background: #fff;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+        }
+
+        .form-group input:disabled {
+            background: #f1f3f4;
+            color: var(--muted);
+            cursor: not-allowed;
+        }
+
+        .btn-login {
+            width: 100%;
+            border-radius: 12px;
+            border: none;
+            padding: 14px 18px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .btn-login:hover:not(:disabled) {
+            background: #185abc;
+        }
+
+        .btn-login:disabled {
+            background: #9aa0a6;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background: var(--danger-bg);
+            border: 1px solid rgba(197, 34, 31, 0.2);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: var(--danger);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .error-icon {
+            font-size: 18px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .lockout-message {
+            background: var(--warning-bg);
+            border: 1px solid rgba(234, 134, 0, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .lockout-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .lockout-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #202124;
+            margin-bottom: 4px;
+        }
+
+        .lockout-timer {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--warning);
+            margin: 8px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .lockout-text {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .attempts-warning {
+            font-size: 12px;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .attempts-warning.low {
+            color: var(--warning);
+        }
+
+        .attempts-warning.critical {
+            color: var(--danger);
+        }
+
+        .security-note {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .security-note strong {
+            color: #202124;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">🏥 Hospital Finder</div>
+                <div class="login-subtitle">Please sign in to access the application</div>
+            </div>
+
+            {% if locked_out %}
+            <div class="lockout-message">
+                <div class="lockout-icon">🔒</div>
+                <div class="lockout-title">Access Temporarily Blocked</div>
+                <div class="lockout-timer" id="countdown">--:--</div>
+                <div class="lockout-text">
+                    Too many failed login attempts.<br>
+                    Please wait before trying again.
+                </div>
+            </div>
+            {% else %}
+            {% if error %}
+            <div class="error-message">
+                <span class="error-icon">⚠️</span>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <form method="POST"
+                action="{{ url_for('login') }}{% if request.args.get('next') %}?next={{ request.args.get('next') }}{% endif %}">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autocomplete="username" {% if locked_out
+                        %}disabled{% endif %} placeholder="Enter your username" />
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password" {% if
+                        locked_out %}disabled{% endif %} placeholder="Enter your password" />
+                </div>
+
+                <button type="submit" class="btn-login" {% if locked_out %}disabled{% endif %}>
+                    {% if locked_out %}Access Blocked{% else %}Sign In{% endif %}
+                </button>
+
+                {% if not locked_out and remaining_attempts is defined and remaining_attempts <= 5 %} <div
+                    class="attempts-warning {% if remaining_attempts <= 2 %}critical{% elif remaining_attempts <= 5 %}low{% endif %}">
+                    {% if remaining_attempts == 1 %}
+                    ⚠️ Last attempt before 10-minute lockout
+                    {% else %}
+                    {{ remaining_attempts }} attempts remaining before lockout
+                    {% endif %}
+        </div>
+        {% endif %}
+        </form>
+
+        <div class="security-note">
+            <strong>Security Notice:</strong> This application is protected.<br>
+            After 10 failed attempts, access will be blocked for 10 minutes.
+        </div>
+    </div>
+    </div>
+
+    {% if locked_out and remaining_time %}
+    <script>
+        (function () {
+            let remaining = {{ remaining_time }
+        };
+        const countdownEl = document.getElementById('countdown');
+        const form = document.querySelector('form');
+        const inputs = form.querySelectorAll('input');
+        const button = form.querySelector('button');
+
+        function updateCountdown() {
+            if (remaining <= 0) {
+                // Reload the page to re-enable login
+                window.location.reload();
+                return;
+            }
+
+            const minutes = Math.floor(remaining / 60);
+            const seconds = remaining % 60;
+            countdownEl.textContent =
+                String(minutes).padStart(2, '0') + ':' +
+                String(seconds).padStart(2, '0');
+
+            remaining--;
+            setTimeout(updateCountdown, 1000);
+        }
+
+        updateCountdown();
+        }) ();
+    </script>
+    {% endif %}
+</body>
+
+</html>
