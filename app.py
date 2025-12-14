@@ -285,8 +285,7 @@ def _safe_float(row, col):
         return None
 
 
-def normalize_str(x: str | None) -> str:
-    return (x or "").strip().lower()
+
 
 
 def volume_category(cases: float | int | None) -> str:
