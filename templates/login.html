@@ -5,6 +5,22 @@
     <meta charset="utf-8" />
     <title>Login – Hospital Finder</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='hospital-finder-favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='hospital-finder-favicon.png') }}">
+
+    <!-- Open Graph (iMessage / link preview) -->
+    <meta property="og:title" content="Hospital Finder">
+    <meta property="og:description"
+        content="Explore nearby hospitals and compare procedure outcomes, complications, and volumes.">
+    <meta property="og:image" content="{{ url_for('static', filename='hospital-finder-logo.png', _external=True) }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+
+    <!-- Twitter Card (fallback) -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ url_for('static', filename='hospital-finder-logo.png', _external=True) }}">
+
     <style>
         :root {
             --bg: #ffffff;
@@ -56,13 +72,22 @@
             margin-bottom: 24px;
         }
 
-        .login-logo {
-            font-size: 24px;
-            font-weight: 600;
-            letter-spacing: -0.03em;
-            color: #202124;
-            margin-bottom: 8px;
+        /* Login logo sizing + centering */
+        .login-header .logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 12px;
         }
+
+        .login-header .logo img {
+            height: 72px;
+            /* change to 60/80 if you want */
+            width: auto;
+            display: block;
+        }
+
+
 
         .login-subtitle {
             font-size: 14px;
@@ -213,7 +238,11 @@
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
-                <div class="login-logo">🏥 Hospital Finder</div>
+                <div class="logo">
+                    <img src="{{ url_for('static', filename='hospital-finder-logo.png') }}" alt="Hospital Finder">
+
+                </div>
+
                 <div class="login-subtitle">Please sign in to access the application</div>
             </div>
 

@@ -3,8 +3,24 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Hospital Finder – Medicare Procedure Explorer</title>
+    <title>Hospital Finder</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='hospital-finder-favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='hospital-finder-favicon.png') }}">
+
+    <!-- Open Graph (iMessage / link preview) -->
+    <meta property="og:title" content="Hospital Finder">
+    <meta property="og:description"
+        content="Explore nearby hospitals and compare procedure outcomes, complications, and volumes.">
+    <meta property="og:image" content="{{ url_for('static', filename='hospital-finder-logo.png', _external=True) }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+
+    <!-- Twitter Card (fallback) -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ url_for('static', filename='hospital-finder-logo.png', _external=True) }}">
+
     <style>
         :root {
             --bg: #ffffff;
@@ -56,10 +72,16 @@
         }
 
         header .logo {
-            font-weight: 600;
-            letter-spacing: -0.03em;
-            color: #202124;
+            display: flex;
+            align-items: center;
         }
+
+        header .logo img {
+            height: 42px;
+            /* ← MAIN FIX */
+            width: auto;
+        }
+
 
         header nav {
             display: flex;
@@ -714,7 +736,11 @@
 <body>
     <div class="page">
         <header>
-            <div class="logo">Hospital Finder</div>
+            <div class="logo">
+                <img src="{{ url_for('static', filename='hospital-finder-logo.png') }}" alt="Hospital Finder">
+
+            </div>
+
             <nav>
                 <a href="/methodology">Methodology</a>
                 <a href="/logout" class="btn-logout">
@@ -730,7 +756,7 @@
                     Find hospitals near you for a specific procedure
                 </div>
                 <div class="top-intro-subtitle">
-                    Powered by Medicare inpatient claims and NPPES. Choose a procedure group
+                    Choose a procedure group
                     (or leave it blank) and a location to see complication, mortality, and
                     readmission patterns at nearby hospitals.
                 </div>
@@ -822,7 +848,7 @@
                         <div>
                             <div class="panel-header-title">Hospital profile</div>
                             <div class="panel-header-sub">
-                                Medicare case volume, complication patterns, and surgeons
+                                case volume, complication patterns, and surgeons
                                 performing this procedure group (when available).
                             </div>
                         </div>
@@ -844,7 +870,7 @@
                                         Details hidden for low case volume
                                     </div>
                                     <div>
-                                        This hospital has fewer than 11 Medicare inpatient cases in this procedure
+                                        This hospital has fewer than 11 inpatient cases in this procedure
                                         scope. To protect patient privacy, detailed outcomes and surgeon-level
                                         statistics are not shown.
                                     </div>
@@ -856,9 +882,9 @@
                                 <div class="details-grid">
                                     <div class="detail-block">
                                         <div class="detail-label-with-tooltip">
-                                            <span class="detail-label">Case volume (Medicare)</span>
+                                            <span class="detail-label">Case volume</span>
                                             <span class="tooltip-trigger"
-                                                data-tooltip="Number of inpatient Medicare claims at this hospital in the search scope (either the chosen procedure group or all tracked procedures).">?</span>
+                                                data-tooltip="Number of inpatient claims at this hospital in the search scope (either the chosen procedure group or all tracked procedures).">?</span>
                                         </div>
                                         <div class="detail-value" id="detailVolume"></div>
                                         <div class="detail-note" id="detailVolumeNote"></div>
@@ -897,7 +923,7 @@
                                     <div class="detail-label-with-tooltip">
                                         <span class="detail-label">Top procedures at this hospital</span>
                                         <span class="tooltip-trigger"
-                                            data-tooltip="Top 5 procedures at this hospital by Medicare case volume within your current search scope (group or all procedures).">?</span>
+                                            data-tooltip="Top 5 procedures at this hospital by case volume within your current search scope (group or all procedures).">?</span>
                                     </div>
                                     <table class="top-procedures-table">
                                         <thead>
@@ -936,9 +962,9 @@
                                 <div class="details-tab-panel" id="tabFaculty" style="display: none">
                                     <ul class="faculty-list" id="facultyList"></ul>
                                     <div class="explanation-card">
-                                        Surgeons listed here are those with Medicare inpatient claims
+                                        Surgeons listed here are those with inpatient claims
                                         for procedures in this search scope at this hospital. Only surgeons
-                                        with more than 10 Medicare cases in this scope are shown, to reduce
+                                        with more than 10 cases in this scope are shown, to reduce
                                         noise from very low-volume operators and protect privacy.
                                     </div>
                                 </div>
@@ -1477,7 +1503,7 @@
 
             const scopeLabel = hospital.procedure_group_label
                 ? `Scope: ${hospital.procedure_group_label}`
-                : "Scope: All tracked inpatient procedures at this hospital (Medicare data)";
+                : "Scope: All tracked inpatient procedures at this hospital";
             detailScopeEl.textContent = scopeLabel;
 
             const caseCount =
@@ -1499,7 +1525,7 @@
                         : "Volume unknown (suppressed)";
                 detailVolumeEl.textContent = volumeLabel;
                 detailVolumeNoteEl.textContent =
-                    "Fewer than 11 Medicare inpatient cases in this search scope. Detailed outcomes and surgeon metrics are hidden.";
+                    "Fewer than 11 inpatient cases in this search scope. Detailed outcomes and surgeon metrics are hidden.";
 
                 detailComplicationTierEl.textContent = "Not shown (low volume)";
                 detailComplicationNoteEl.textContent =
@@ -1532,7 +1558,7 @@
             detailVolumeNoteEl.textContent = `${hospital.cases !== null && hospital.cases !== undefined
                 ? hospital.cases
                 : "N/A"
-                } Medicare inpatient claim(s) in this search scope.`;
+                } inpatient claim(s) in this search scope.`;
 
             // Complication tier + explanation
             detailComplicationTierEl.textContent =
@@ -1718,7 +1744,7 @@
                 const li = document.createElement("li");
                 li.className = "faculty-item";
                 li.innerHTML =
-                    '<span class="faculty-meta">No surgeons with more than 10 Medicare inpatient cases in this scope were found for this hospital.</span>';
+                    '<span class="faculty-meta">No surgeons with more than 10 inpatient cases in this scope were found for this hospital.</span>';
                 facultyListEl.appendChild(li);
             } else {
                 docs.forEach((d) => {
@@ -1762,7 +1788,7 @@
 
                     const casesText =
                         d.cases !== null && d.cases !== undefined
-                            ? `${d.cases} Medicare inpatient case(s) in this scope`
+                            ? `${d.cases} inpatient case(s) in this scope`
                             : "Cases not available";
 
                     li.innerHTML = `

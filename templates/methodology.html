@@ -5,6 +5,22 @@
     <meta charset="utf-8" />
     <title>Hospital Finder – Methodology</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='hospital-finder-favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='hospital-finder-favicon.png') }}">
+
+    <!-- Open Graph (iMessage / link preview) -->
+    <meta property="og:title" content="Hospital Finder">
+    <meta property="og:description"
+        content="Explore nearby hospitals and compare Medicare procedure outcomes, complications, and volumes.">
+    <meta property="og:image" content="{{ url_for('static', filename='hospital-finder-logo.png', _external=True) }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+
+    <!-- Twitter Card (fallback) -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ url_for('static', filename='hospital-finder-logo.png', _external=True) }}">
+
     <style>
         :root {
             --bg: #ffffff;
@@ -43,10 +59,16 @@
         }
 
         header .logo {
-            font-weight: 600;
-            color: #202124;
-            letter-spacing: -0.03em;
+            display: flex;
+            align-items: center;
         }
+
+        header .logo img {
+            height: 15px;
+            /* ← MAIN FIX */
+            width: auto;
+        }
+
 
         header nav a {
             color: var(--accent);
@@ -167,7 +189,11 @@
 
 <body>
     <header>
-        <div class="logo">Hospital Finder</div>
+        <div class="logo">
+            <img src="{{ url_for('static', filename='hospital-finder-logo.png') }}" alt="Hospital Finder">
+
+        </div>
+
         <nav>
             <a href="/">Search</a>
             <a href="/methodology">Methodology</a>
