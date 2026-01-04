@@ -421,20 +421,20 @@ hospital_df = hospital_df.dropna(subset=["lat", "lng"])
 # Routes (Protected)
 # -------------------------------------------------------------------
 @app.route("/")
-@login_required
+ 
 def index():
     # expects templates/index.html
     return render_template("index.html")
 
 
 @app.route("/methodology")
-@login_required
+
 def methodology():
     return render_template("methodology.html")
 
 
 @app.route("/api/procedure-groups")
-@login_required
+
 def api_procedure_groups():
     """
     Return the available procedure groups for the autocomplete.
@@ -454,7 +454,7 @@ def api_procedure_groups():
 
 
 @app.route("/api/search")
-@login_required
+
 def api_search():
     """
     Query params:
